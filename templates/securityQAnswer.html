@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Security Question Answer</title>
+</head>
+<link type="text/css" rel="stylesheet" href="../../static/css/materialize.css" media="screen,projection"/>
+
+<style>
+  * {
+    /*initial all the elements*/
+    padding: 0px;
+    margin: 0px;
+    body: 100%;
+  }
+</style>
+<body>
+<div class="container">
+  <!-- Page Content goes here -->
+  <div class="securityAnswerBox hoverable">
+    <h2 class="center-align">Please Answer Your Question</h2>
+    <form id="securityAnswerInfo" action={% url "confirmAnswer" %} method="post">
+      <!--first security question-->
+      <div class="row">
+        <div class="col s8 push-l2">
+          <div class="row">
+            <div class="input-field col s12">
+              <input disabled id="question" name="question" type="text" class="validate" value="some question">
+              <label for="question" >Question</label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!--first security answer-->
+      <div class="row">
+        <div class="col s8 push-l2">
+          <div class="row">
+            <div class="input-field col s12">
+              <input id="Answer" name="answer" type="text" class="validate">
+              <label for="Answer">Answer</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!--button for the setting and clean text area-->
+      <div class="row">
+        <div class="col s8 push-l5">
+          <button id="answerQ" class="waves-effect waves-light btn" type="submit">Submit</button>
+          <button id="cleanAnswer" class="waves-effect waves-light btn" style="margin-left: 25px">Clean</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+</div>
+</body>
+<script type="text/javascript" src="../../static/js/materialize.min.js"></script>
+<script type="text/javascript" src="../../static/js/jquery-3.3.1.js"></script>
+<script type="text/javascript" src="../../static/js/securityQuestionAnswer.js"></script>
+</html>

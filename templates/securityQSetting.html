@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+</head>
+<link type="text/css" rel="stylesheet" href="../../static/css/materialize.css" media="screen,projection"/>
+
+<style>
+  * {
+    /*initial all the elements*/
+    padding: 0px;
+    margin: 0px;
+    body: 100%;
+  }
+</style>
+<body>
+<div class="container">
+  <!-- Page Content goes here -->
+  <div class="securitySettingBox hoverable">
+    <h1 class="center-align ">topology</h1>
+    <form id="securitySettingInfo" action={% url "confirmCreatingSq" %} method="post" >
+      <!--first security question-->
+      <div class="row">
+        <div class="col s8 push-l2">
+          <div class="row">
+            <div class="input-field col s12">
+              <input id="question1" name="question1" type="text" class="validate">
+              <label for="question1">First Question</label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!--first security answer-->
+      <div class="row">
+        <div class="col s8 push-l2">
+          <div class="row">
+            <div class="input-field col s12">
+              <input id="answer1" name="answer1" type="text" class="validate">
+              <label for="answer1">First Answer</label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!--second security question-->
+      <div class="row">
+        <div class="col s8 push-l2">
+          <div class="row">
+            <div class="input-field col s12">
+              <input id="question2" name="question2"type="text" class="validate">
+              <label for="question2">Second Question</label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!--second security answer-->
+      <div class="row">
+        <div class="col s8 push-l2">
+          <div class="row">
+            <div class="input-field col s12">
+              <input id="answer2" name="answer2" type="text" class="validate">
+              <label for="answer2">Second Answer</label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!--third security question-->
+      <div class="row">
+        <div class="col s8 push-l2">
+          <div class="row">
+            <div class="input-field col s12">
+              <input id="question3" name="question3" type="text" class="validate">
+              <label for="question3">Third Question</label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!--second security answer-->
+      <div class="row">
+        <div class="col s8 push-l2">
+          <div class="row">
+            <div class="input-field col s12">
+              <input id="answer3" name="answer3" type="text" class="validate">
+              <label for="answer3">Third Answer</label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!--button for the setting and clean text area-->
+      <div class="row">
+        <div class="col s8 push-l5">
+          <button id="settingQ" class="waves-effect waves-light btn" type="submit">set up</button>
+          <button id="cleanText" class="waves-effect waves-light btn" style="margin-left: 25px">clean</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+</div>
+</body>
+<script type="text/javascript" src="../../static/js/materialize.min.js"></script>
+<script type="text/javascript" src="../../static/js/jquery-3.3.1.js"></script>
+</html>

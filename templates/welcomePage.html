@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Welcome</title>
+</head>
+<style>
+  * {
+    /*initial all the elements*/
+    padding: 0px;
+    margin: 0px;
+    body: 100%;
+  }
+</style>
+<!--<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">-->
+
+<link type="text/css" rel="stylesheet" href="../../static/css/materialize.css" media="screen,projection"/>
+<link type="text/css" rel="stylesheet" href="../../static/css/custemise.css">
+<body>
+<div class="container">
+  <!-- Page Content goes here -->
+  <div class="loginbox hoverable">
+    <h1 class="center-align ">topology</h1>
+    <form id="loginInfo">
+      <!--text area for user id-->
+      <div class="row">
+        <div class="col s8 push-l2">
+          <div class="row">
+            <div class="input-field col s12">
+              <input id="username" type="text" class="validate">
+              <label for="username">username</label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!--text area for password-->
+      <div class="row">
+        <div class="col s8 push-l2">
+          <div class="row">
+            <div class="input-field col s12">
+              <input id="password" type="password" class="validate">
+              <label for="password">password</label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!--button for the login and clean text area-->
+      <div class="row">
+        <div class="col s8 push-l5">
+          <button id="login" class="waves-effect waves-light btn" type="submit">login</button>
+          <button id="cleanText" class="waves-effect waves-light btn" style="margin-left: 25px">clean</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+</div>
+</body>
+<script type="text/javascript" src="../../static/js/materialize.min.js"></script>
+<script type="text/javascript" src="../../static/js/jquery-3.3.1.js"></script>
+<script type="text/javascript" src="../../static/js/welcomePageCustomise.js"></script>
+<script>
+  $(document).ready(function () {
+    $('.sidenav').sidenav();
+    $('input#input_text, textarea#textarea2').characterCounter();
+  });
+</script>
+</html>

@@ -1,0 +1,9 @@
+/*modify the welcome page's login box*/
+.loginbox {
+  height: 430px;
+  margin-top: 150px;
+}
+/*modify the text area for user id*/
+.loginboxUid{
+  margin-top: 200px;
+}
