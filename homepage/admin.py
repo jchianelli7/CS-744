@@ -10,3 +10,5 @@ class MySecurityQuestion(admin.ModelAdmin):
     list_display = ("id","userID_id","question","answer","status")
     ordering = ("id")
 
+class MyNode(admin.ModelAdmin):
+    list_display = ("id","")

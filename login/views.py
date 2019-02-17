@@ -11,13 +11,16 @@ def loginPage(request):
     return render(request,'welcomePage.html')
 
 def login(request):
-    request = simplejson.loads(request.body)
     try:
+        request = simplejson.loads(request.body)
         user= User.objects.filter(username=request['username'])[0]
     except IndexError:
         print('username is incorrect')
         message={'message':'username is incorrect'}
         request = HttpResponse(json.dumps(message))
+    except simplejson.JSONDecodeError:
+        print('json is empty')
+        request = redirect('/homepage/logout/')
     else:
         if (user.check_password(request['password']) == False):
             print('password is incorrect')

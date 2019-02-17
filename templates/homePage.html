@@ -1,11 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+  <meta charset="UTF-8">
+  <title>Title</title>
 </head>
+<!--<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">-->
+<link href="../../static/css/materialize.css" rel="stylesheet">
+<link href="../../static/css/homePageSideNav.css" rel="stylesheet">
+<style>
+  *{
+    margin: 0;
+  }
+</style>
 <body>
-  <h1>this is home page(not implement yet)</h1>
-  <h2></h2>
+<!--sidenav start here-->
+<div class="sideNav hoverable">
+  <div class="container">
+    <div class="row">
+      <div class="col s12">
+        <!--title for user-->
+        <h6 id="userStatus" class="valign-wrapper"></h6>
+        <!--logout button-->
+        <button id="logout" class="waves-effect waves-light btn">Logout</button>
+      </div>
+    </div>
+    <!--function interface start here-->
+    <div class="row">
+      <div class="col pull-s1 s12">
+        <ul class="collapsible" >
+          <li>
+            <!--add function start here-->
+            <div class="collapsible-header"><i class="material-icons">Add</i></div>
+            <div class="collapsible-body">
+              <!--add node button-->
+              <button id="" class="waves-effect waves-light btn" style="margin-left: -19%">Node</button>
+            </div>
+          </li>
+          <li>
+            <!--delete function start here-->
+            <div class="collapsible-header"><i class="material-icons">Delete</i></div>
+            <div class="collapsible-body"><span>Lorem ipsum dolor sit amet.</span></div>
+          </li>
+          <li>
+            <!--update function start here-->
+            <div class="collapsible-header"><i class="material-icons">update</i></div>
+            <div class="collapsible-body"><span>Lorem ipsum dolor sit amet.</span></div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+<!--container for visualization-->
+<div class="container">
+  <!-- visualization goes here -->
+    <div class="col s12"></div>
+</div>
 </body>
+<script src="../../static/js/jquery-3.3.1.js"></script>
+<script src="../../static/js/materialize.min.js"></script>
+<script src="../../static/js/homePage.js"></script>
+<script>
+  $(document).ready(function () {
+    $('.collapsible').collapsible();
+  });
+</script>
 </html>
