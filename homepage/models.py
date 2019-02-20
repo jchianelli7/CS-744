@@ -9,35 +9,48 @@ class Node(models.Model):
     number=models.CharField(max_length=16)
     type=models.IntegerField(default=0)# 0 is the non-connector node,1 is the connector
     status=models.BooleanField(default=True)#true is the active, false is the non-active
-    connector=models.ForeignKey('homepage.Node',on_delete=models.CASCADE)
+    pattern=models.CharField(max_length=16,default='P01')
 
-    def addNode(self,node):
+    def addNode(self,node=None):
         if(isinstance(self,Node)==False):
-            raise exception.addNodeError('need a node type parameter')
-        elif(isinstance(node,Node)==False):
-            raise exception.addNodeError('the path did not link the node just added')
-        elif(Node.objects.filter(self).exist()):
-            raise exception.addNodeError('the adding node has already exist')
-        elif (Node.objects.filter(node).exist()==False):
-            raise exception.addNodeError('the node link to adding node is not exist')
-        elif(Path.objects.filter(startNodeId=node.id,endNodeId=self.id).exist() or Path.objects.filter(startNode=self,endNodeId=node).exist()):
-            raise exception.addNodeError('the path has already exist')
-        if (self.type == 0):
-            self.connector = node.connector
-        elif (self.type == 1):
-            if (node.type == 0):
-                raise exception.addNodeError('connector should not link with the node of other patterns')
+            raise exception.addNodeError('need a node type argu for added node instead of '+type(self)+'')
+        if(isinstance(node,Node)==False):
+            if(isinstance(node,type(None))==True):
+                if(Path.objects.all().count()==0 and self.type==1):
+                    self.save()
+                    print('add node '+self.number+' success')
+                elif(Path.objects.all().count()==0 and self.type==0):
+                    raise exception.addNodeError('the first node of the system should be connector')
+                elif(Path.objects.all().count()>0):
+                    raise exception.addNodeError('the added node should be linked in network')
             else:
-                self.connector = self
-        try:
-            path = Path
-            path.addLink(node1=self, node2=node)
-        except exception.addLinkError as e:
-            raise exception.addLinkError(e)
+                raise exception.addNodeError('need a node type argu for linked node instead of '+str(type(node))+'')
+        elif(Node.objects.filter(number=self.number).exists()):
+            raise exception.addNodeError('the added node has already exist')
+        elif (Node.objects.filter(number=node.number).exists()==False):
+            raise exception.addNodeError('the node link to adding node is not exist')
+        elif(Path.objects.filter(startNodeId=node.id,endNodeId=self.id).exists() or Path.objects.filter(startNode=self,endNodeId=node).exists()):
+            raise exception.addNodeError('the path has already exist')
         else:
-            self.save()
-        finally:
-            return
+            if (self.type == 0):
+                if(Path.objects.filter(type=self.type,pattern=self.pattern).count()==6):
+                    raise exception.addNodeError('the pattern'+str(self.pattern)+' has been full')
+                else:
+                    self.pattern = node.pattern
+            elif (self.type == 1):
+                if (node.type == 0):
+                    raise exception.addNodeError('connector should not link with the node of other patterns')
+            try:
+                path = Path
+                path.addLink(node1=self, node2=node)
+            except exception.addLinkError as e:
+                raise exception.addLinkError(e)
+            else:
+                self.save()
+                print('add node ' + self.number + ' success')
+            finally:
+                return
+        return
 
     def deleteNode(self):
         try:
