@@ -4,27 +4,19 @@ from homepage.models import *
 # Create your tests here.
 
 class TestModelFunc(TestCase):
-    def test_addLink(self):
-        # Node()相当于给其加了个self
-        node=Node()
-        node.type=1
-        node.number='S01'
-        try:
-            node.addNode()
-            node.save()
-        except exception.addLinkError as e:
-            print(e)
-        except exception.addNodeError as e:
-            print(e)
+    def test_addNode(self):
+        link = {'link': [{'source': {'id': 1, 'number': 'N01', 'pattern': 'P1', 'type': 1},
+                          'target': {'id': 2, 'number': 'N02', 'pattern': 'P1', 'type': 0}
+                          },
 
-        node.type = 0
-        node.number = 'S02'
-        try:
-            node.addNode()
-        except exception.addLinkError as e:
-            print(e)
-        except exception.addNodeError as e:
-            print(e)
+                         {'source': {'id': 3, 'number': 'N03', 'pattern': 'P1', 'type': 0},
+                          'target': {'id': 4, 'number': 'N04', 'pattern': 'P1', 'type': 0}
+                          }
+                         ]
+                }
+
+        response=self.client.post('/homepage/addNode/',json.dumps(link),Ccontent_type="application/json")
+        print(response)
 
 if __name__ == '__main__':
     TestCase.main()

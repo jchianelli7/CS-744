@@ -1,6 +1,7 @@
 from django.db import models
-from homepage import exception
 from django.core.exceptions import *
+import json
+import simplejson
 
 # Create your models here.
 
@@ -10,56 +11,80 @@ class Node(models.Model):
     type=models.IntegerField(default=0)# 0 is the non-connector node,1 is the connector
     status=models.BooleanField(default=True)#true is the active, false is the non-active
     pattern=models.CharField(max_length=16,default='P01')
+    link=models.ManyToManyField('Node')
 
-    def addNode(self,node=None):
-        if(isinstance(self,Node)==False):
-            raise exception.addNodeError('need a node type argu for added node instead of '+type(self)+'')
+    def link_list(self):
+        return ','.join([i.number for i in self.node_set.all()])
+
+    def save(self, *args, **kwargs):
+        if (Node.objects.filter(id=self.id).exists() == False):
+            if (Node.objects.filter(pattern=self.pattern).count() == 7):
+                raise Node.nodeNumberError('7 node have been existed in pattern')
+
+            elif (Node.objects.filter(pattern=self.pattern).count() == 0 and self.type == 0):
+                raise Node.nodeInitialError('inital node of this pattern should be connector')
+
+            elif (Node.objects.filter(pattern=self.pattern).exists() and self.type == 1):
+                raise Node.nodeNumberError('1 connector have been existed in pattern')
+
+        return super(Node, self).save(*args, **kwargs)
+
+
+    def addLink(self,node):
         if(isinstance(node,Node)==False):
-            if(isinstance(node,type(None))==True):
-                if(Path.objects.all().count()==0 and self.type==1):
-                    self.save()
-                    print('add node '+self.number+' success')
-                elif(Path.objects.all().count()==0 and self.type==0):
-                    raise exception.addNodeError('the first node of the system should be connector')
-                elif(Path.objects.all().count()>0):
-                    raise exception.addNodeError('the added node should be linked in network')
-            else:
-                raise exception.addNodeError('need a node type argu for linked node instead of '+str(type(node))+'')
-        elif(Node.objects.filter(number=self.number).exists()):
-            raise exception.addNodeError('the added node has already exist')
-        elif (Node.objects.filter(number=node.number).exists()==False):
-            raise exception.addNodeError('the node link to adding node is not exist')
-        elif(Path.objects.filter(startNodeId=node.id,endNodeId=self.id).exists() or Path.objects.filter(startNode=self,endNodeId=node).exists()):
-            raise exception.addNodeError('the path has already exist')
+            raise Node.nodeError('the type of argu for addLink should be Node instead of '+str(type(node))+'.')
+
+        elif(Node.objects.filter(id=node.id).exists()==False):
+            raise Node.nodeNotExistError('the linked node did not exist')
+
+        elif(Node.objects.filter(id=self.id).exists()==False):
+            raise Node.nodeNotExistError('the source node did not exist')
+
+        elif(self.link.filter(type=0).count()==3 or node.link.filter(type=0).count()==3):
+            raise Node.nodeLinkError('the node has three links')
+
+        elif(self.type==1 and self.link.count()==0 and node.type==0 and Node.objects.filter(id!=self.id,type=1).exists()):
+            node=Node.objects.filter(id!=self.id,type=1)[0]
+            print(node.number)
+            raise Node.nodeInitialError('the inital connector of new pattren should linked with connector instead of normal node')
         else:
-            if (self.type == 0):
-                if(Path.objects.filter(type=self.type,pattern=self.pattern).count()==6):
-                    raise exception.addNodeError('the pattern'+str(self.pattern)+' has been full')
-                else:
-                    self.pattern = node.pattern
-            elif (self.type == 1):
-                if (node.type == 0):
-                    raise exception.addNodeError('connector should not link with the node of other patterns')
-            try:
-                path = Path
-                path.addLink(node1=self, node2=node)
-            except exception.addLinkError as e:
-                raise exception.addLinkError(e)
-            else:
-                self.save()
-                print('add node ' + self.number + ' success')
-            finally:
-                return
+            self.link.add(node)
+            node.link.add(self)
         return
 
-    def deleteNode(self):
-        try:
-            self.delete()
-        except ObjectDoesNotExist:
-            raise exception.deleteNodeError('the node is not exist')
-        finally:
-            return
+    def deleteLink(self,node):
+        if(isinstance(node,Node)==False):
+            raise Node.nodeError('the type of argu for deletLink should be Node instead of '+type(node)+'.')
+        if(Path.objects.filter(startNodeId=self,endNodeId=node).exists()==False):
+            raise Node.nodeError('the link did not exists')
+        elif(self.type==1 and node.type==1 and self.link.count()>0):
+            raise Node.nodeError('this pattern has more than one node, cannot delete connector.')
+        else:
+            self.link.remove(node)
+            node.link.remove(self)
+        return
 
+    def __unicode__(self):
+        return 'No. '+self.number
+
+    class nodeError(Exception):
+        def __init__(self, ErrorInfo):
+            super().__init__(self, ErrorInfo)  # 初始化父类
+            self.errorinfo = ErrorInfo
+        def __str__(self):
+            return self.errorinfo
+
+    class nodeNotExistError(nodeError):
+        pass
+
+    class nodeLinkError(nodeError):
+        pass
+
+    class nodeNumberError(nodeError):
+        pass
+
+    class nodeInitialError(nodeError):
+        pass
 
 class Message(models.Model):
 
@@ -87,31 +112,22 @@ class Path(models.Model):
                         break
         return link
 
-    def addLink(self,node1,node2):
-        if((isinstance(node1,Node) and isinstance(node2,Node))==False):
-            raise exception.addLinkError('need two Node type as input')
-        elif(Path.objects.filter(startNodeId_id=node1.id,endNodeId_id=node2.id).exist()
-                or Path.objects.filter(startNodeId_id=node2.id,endNodeId_id=node1.id).exist()):
-            raise exception.addLinkError('the path has been already exist')
-        else:
-            path=Path
-            path.startNodeId_id=node1.id
-            path.endNodeId_id=node2.id
-            path.save()
-            path.startNodeId_id=node2.id
-            path.startNodeId_id = node1.id
-            path.save()
-        return
-
-
     def deleteLink(self,node1,node2):
         path = self.objects.filter(startNodeId_id=node1.id or node2.id, endNodeId_id=node2.id or node1.id)
         try:
             path.delete()
         except ObjectDoesNotExist:
-            raise exception.deleteNodeError('the path is not exist')
+            raise Node.nodeError('the path is not exist')
         finally:
             return
+
+    class linkError(Exception):
+        def __init__(self, ErrorInfo):
+            super().__init__(self, ErrorInfo)  # 初始化父类
+            self.errorinfo = ErrorInfo
+
+        def __str__(self):
+            return self.errorinfo
 
 
 
