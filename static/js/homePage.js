@@ -117,7 +117,7 @@ function addNode(type, pattern) {
         number: number,
         type: type,
         status: true,
-        pattern: pattern,
+        pattern: 'P' + ("0" + pattern).slice(-2),
         // x: Math.cos(patterns[pattern].nodes.length / numPatterns * 2 * Math.PI) * 200 + 1200 / 2 + Math.random(),
         // y: Math.sin(patterns[pattern].nodes.length / numPatterns * 2 * Math.PI) * 200 + 800 / 2 + Math.random()
         x: Math.random(),
@@ -344,7 +344,7 @@ function _updateNodes(nodeList) {
             node.append('circle').attr('r', 0).style('fill', d => d.type === 1 ? "blue" : "white")
                 .transition().duration(750).ease('elastic').attr('r', 20);
             node.append('text')
-                .text(node => "N" + node.id)
+                .text(node => node.number)
                 .attr('font-size', 8)
                 .attr('dx', -6)
                 .attr('dy', 4)
