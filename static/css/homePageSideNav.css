@@ -1,0 +1,13 @@
+.sideNav{
+  position: absolute;
+  height: 100%;
+  width: 300px;
+}
+
+h6{
+  margin-top: 40%;
+}
+
+#logout{
+  margin-top: 30%;
+}

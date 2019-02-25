@@ -30,7 +30,6 @@ class securityQuestion(models.Model):
     def wrongAnswer(self):
         self.status=False
         self.save(update_fields=['status'])
-        print(securityQuestion.objects.filter(userID_id=self.userID,status=False).count())
         if(securityQuestion.objects.filter(userID_id=self.userID,status=False).count()==3):
             #if use self.userID the id would get a User class data
             user=User.objects.filter(id=self.userID_id)[0]
