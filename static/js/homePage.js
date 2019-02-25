@@ -349,7 +349,7 @@ function _updateNodes(nodeList) {
                 .attr('dx', -6)
                 .attr('dy', 4)
             node.append('text')
-                .text(node => node.type === 1 ? "P" + node.pattern : '')
+                .text(node => node.type === 1 ? "" + node.pattern : '')
                 .attr('font-size', 8)
                 .attr('fill', 'black')
                 .attr('dx', 25)
