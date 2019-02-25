@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/CS-744.iml" filepath="$PROJECT_DIR$/.idea/CS-744.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/cs744Network.iml" filepath="$PROJECT_DIR$/.idea/cs744Network.iml" />
     </modules>
   </component>
