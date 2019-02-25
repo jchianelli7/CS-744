@@ -6,14 +6,52 @@
         key = key.trim();
         if (key === "is_superuser") {
             let isAdmin = cookieArr[i].split("=")[1].trim();
+            var x = document.getElementById("admin");
             if (isAdmin === 'True') {
                 $("#userStatus").text('Admin').css('margin-left', 15 + '%')
+                x.style.display = "block";
             } else {
                 $("#userStatus").text('Normal User')
+                x.style.display = "none";
+
             }
         }
     }
 }()
+
+$.ajax({
+    url: "/homepage/get/", // the endpoint
+    type: "GET", // http method
+
+    // handle a successful response
+    success: function (response) {
+        if (response == '') return
+        var nodes = JSON.parse(response)
+        let nodelist = []
+        nodes.node.forEach(function (e) {
+            const node = {
+                id: e.id,
+                number: e.number, //parseInt(e.number.substr(1), 10),
+                type: e.type,
+                status: e.status,
+                pattern: e.pattern, //parseInt(e.pattern.substr(1), 10),
+                // x: Math.cos(patterns[pattern].nodes.length / numPatterns * 2 * Math.PI) * 200 + 1200 / 2 + Math.random(),
+                // y: Math.sin(patterns[pattern].nodes.length / numPatterns * 2 * Math.PI) * 200 + 800 / 2 + Math.random()
+                x: Math.random(),
+                y: Math.random()
+            };
+            nodelist.push(node)
+        });
+        draw(nodelist, nodes.link)
+    },
+
+    // handle a non-successful response
+    error: function (xhr, errmsg, err) {
+        $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: " + errmsg +
+            " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+        console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+    }
+});
 
 $('#logout').on('click', function () {
     window.location.href = '/homepage/logout/'
@@ -59,11 +97,7 @@ document.querySelector('#btn_delete').addEventListener('click', e => {
     this.deleteNode(pattern, id);
 });
 
-document.querySelector('#btn_delete_link').addEventListener('click', e => {
-    var source = document.getElementById("sourcelink").value;
-    var target = document.getElementById("targetlink").value;
-    this.removeLinkBetween(source, target)
-});
+
 var numNodes = 0;
 var patterns = [];
 var numPatterns = 4;
@@ -75,7 +109,6 @@ for (var i = 0; i < 4; i++) {
 }
 
 function addNode(type, pattern) {
-    var pattern = pattern
     if (patterns[pattern].nodes.length === 7) return; //no more than 7 nodes
     let id = this._nextID()
     let number = 'N' + ("0" + this._nextID()).slice(-2);
@@ -85,8 +118,10 @@ function addNode(type, pattern) {
         type: type,
         status: true,
         pattern: pattern,
-        x: Math.cos(patterns[pattern].nodes.length / numPatterns * 2 * Math.PI) * 200 + 1200 / 2 + Math.random(),
-        y: Math.sin(patterns[pattern].nodes.length / numPatterns * 2 * Math.PI) * 200 + 800 / 2 + Math.random()
+        // x: Math.cos(patterns[pattern].nodes.length / numPatterns * 2 * Math.PI) * 200 + 1200 / 2 + Math.random(),
+        // y: Math.sin(patterns[pattern].nodes.length / numPatterns * 2 * Math.PI) * 200 + 800 / 2 + Math.random()
+        x: Math.random(),
+        y: Math.random()
     };
 
     patterns[pattern].nodes.push(node);
@@ -114,6 +149,7 @@ function addNode(type, pattern) {
     let data = {
         'link': []
     }
+    console.log(this.forceLayout.links())
     data.link = this.forceLayout.links()
     if (patterns[pattern].nodes.length === 1) {
         console.log('conn')
@@ -234,26 +270,6 @@ function removeLinkBetween(id1, id2) {
         'node1': {id: id1},
         'node2': {id: id2}
     }
-
-    $.ajax({
-        url: "/homepage/deleteLink/", // the endpoint
-        type: "POST", // http method
-        data: JSON.stringify(data),
-
-        // handle a successful response
-        success: function (response) {
-            // console.log(JSON.parse(response)) // log the returned json to the console
-            console.log("success"); // another sanity check
-            _redraw()
-        },
-
-        // handle a non-successful response
-        error: function (xhr, errmsg, err) {
-            $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: " + errmsg +
-                " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
-            console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
-        }
-    });
 }
 
 function _getConnectorLinks(id) {
@@ -298,8 +314,25 @@ function _redraw() {
     this.forceLayout.start();
 }
 
-function _updateNodes() {
-    const nodes = this.forceLayout.nodes();
+function draw(nodes, links) {
+    nodes.forEach(function (e) {
+        this.forceLayout.nodes().push(e)
+        patterns[parseInt(e.pattern.substr(1), 10)].nodes.push(e)
+    });
+    links.forEach(function (e) {
+        let source = find(e.source.id)
+        let target = find(e.target.id)
+
+        this.forceLayout.links().push({
+            source, target
+        });
+    });
+    this._redraw()
+}
+
+
+function _updateNodes(nodeList) {
+    const nodes = nodeList == null ? this.forceLayout.nodes() : nodeList
     const sel = this.vis.select('.nodeContainer').selectAll('.node');
     const binding = sel.data(nodes, function (d) {
         return d.id
@@ -330,8 +363,8 @@ function _updateNodes() {
 
 }
 
-function _updateLinks() {
-    const layout_links = this.forceLayout.links();
+function _updateLinks(linkList) {
+    const layout_links = linkList == null ? this.forceLayout.links() : linkList
     const links = this.vis.select('.linkContainer').selectAll(".link").data(layout_links);
     links.enter().insert('line').attr('class', 'link').style('stroke', 'white').style('stroke-width', 5)
         .attr('x1', d => d.source.x).attr('y1', d => d.source.y).attr('x2', d => d.target.x).attr('y2', d => d.target.y);
