@@ -1,3 +1,4 @@
+/* Functions Start */
 !function isAdmin() {
     let cookie = document.cookie;
     let cookieArr = cookie.split(";");
@@ -19,6 +20,7 @@
     }
 }()
 
+// GET current nodes in database
 $.ajax({
     url: "/homepage/get/", // the endpoint
     type: "GET", // http method
@@ -26,9 +28,17 @@ $.ajax({
     // handle a successful response
     success: function (response) {
         if (response == '') return
+        console.log(JSON.parse(response))
         var nodes = JSON.parse(response)
         let nodelist = []
+
         nodes.node.forEach(function (e) {
+            let numNodes = 7, i = 0, currentPattern = 1
+            if (parseInt(e.pattern.substr(1), 10) != currentPattern) {
+                i = 0
+                currentPattern = parseInt(e.pattern.substr(1), 10)
+            }
+
             const node = {
                 id: e.id,
                 number: e.number, //parseInt(e.number.substr(1), 10),
@@ -56,24 +66,43 @@ $.ajax({
 $('#logout').on('click', function () {
     window.location.href = '/homepage/logout/'
 })
+/* End Functions */
 
-this.canvas = d3.select('#canvas').append('svg:svg').attr('width', '1200').attr('height', '800');
+/* Globals start */
+var numNodes = 0;
+var patterns = [];
+var numPatterns = 4;
+for (var i = 0; i < 4; i++) {
+    var pattern = {};
+    pattern['nodes'] = [];
+    pattern['links'] = 0;
+    patterns.push(pattern);
+}
 
-this.vis = this.canvas.append('svg:g');
+//this.canvas = d3.select('#canvas').append('svg:svg').attr('width', '1200').attr('height', '800');
+var svg = d3.select('#canvas').append('svg:svg').attr('width', '100%').attr('height', '100%')
+    .call(d3.behavior.zoom().on("zoom", function () {
+        svg.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")")
+    }))
+this.vis = svg.append('svg:g');
 
 this.vis.append('svg:g').attr('class', 'linkContainer');
 this.vis.append('svg:g').attr('class', 'nodeContainer');
 
 this.forceLayout = d3.layout.force().size([1200, 800]).nodes([]).links([])
-//.linkDistance(d => 100)
-//     .charge(function (d) {
-//         var charge = -500;
-//         if (d.index === 0 || d.index % 7 == 0) charge = 10 * charge;
-//         return charge;
-//     }).on("tick", this._tick.bind(this));
-    .charge(-5000)
+   // .linkDistance(100)
+    // .charge(function (d) {
+    //     console.log(d)
+    //     var charge = 0;
+    //     if (d.type == 1) charge = -4000;
+    //     return charge;
+    // }).on("tick", this._tick.bind(this));
+    .charge(-4000)
     .on("tick", this._tick.bind(this));
 
+/* Globals End */
+
+/* Button Event Start */
 document.querySelector('#btn_node').addEventListener('click', e => {
     var pattern = document.getElementById("pattern").value;
     if (patterns[pattern].nodes.length === 0) {
@@ -97,21 +126,13 @@ document.querySelector('#btn_delete').addEventListener('click', e => {
     this.deleteNode(pattern, id);
 });
 
-
-var numNodes = 0;
-var patterns = [];
-var numPatterns = 4;
-for (var i = 0; i < 4; i++) {
-    var pattern = {};
-    pattern['nodes'] = [];
-    pattern['links'] = 0;
-    patterns.push(pattern);
-}
+/* Button Event End */
 
 function addNode(type, pattern) {
     if (patterns[pattern].nodes.length === 7) return; //no more than 7 nodes
     let id = this._nextID()
     let number = 'N' + ("0" + this._nextID()).slice(-2);
+
     const node = {
         id: id,
         number: number,
@@ -314,6 +335,7 @@ function _redraw() {
     this.forceLayout.start();
 }
 
+//Draws nodes and links from database on GET
 function draw(nodes, links) {
     nodes.forEach(function (e) {
         this.forceLayout.nodes().push(e)
@@ -341,6 +363,7 @@ function _updateNodes(nodeList) {
     binding.enter().insert('g').attr('class', 'node').style('z-index', 1).call(sel => {
         sel.each(function (d) {
             const node = d3.select(this);
+            //if(node.type == 1) node.classed("fixed", d.fixed = true);
             node.append('circle').attr('r', 0).style('fill', d => d.type === 1 ? "blue" : "white")
                 .transition().duration(750).ease('elastic').attr('r', 20);
             node.append('text')
