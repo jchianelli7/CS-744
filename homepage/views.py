@@ -78,12 +78,12 @@ def addNode(request):
                     source = Node.objects.filter(number=i['source']['number'])[0]
                 except IndexError:
                     source = Node.objects.create(id=i['source']['id'], number=i['source']['number'],
-                                                 type=i['source']['type'])
+                                                 type=i['source']['type'], pattern=i['source']['pattern'])
                 try:
                     target = Node.objects.filter(number=i['target']['number'])[0]
                 except IndexError:
                     target = Node.objects.create(id=i['target']['id'], number=i['target']['number'],
-                                                 type=i['target']['type'])
+                                                 type=i['target']['type'], pattern=i['source']['pattern'])
                 finally:
                     # if (i['target']):
                     target.link.add(source)

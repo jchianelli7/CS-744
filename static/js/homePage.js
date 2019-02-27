@@ -34,9 +34,9 @@ $.ajax({
 
         nodes.node.forEach(function (e) {
             let numNodes = 7, i = 0, currentPattern = 1
-            if (parseInt(e.pattern.substr(1), 10) != currentPattern) {
+            if (convertPatternToInt(e.pattern) != currentPattern) {
                 i = 0
-                currentPattern = parseInt(e.pattern.substr(1), 10)
+                currentPattern = convertPatternToInt(e.pattern)
             }
 
             const node = {
@@ -69,10 +69,8 @@ $('#logout').on('click', function () {
 /* End Functions */
 
 /* Globals start */
-var numNodes = 0;
 var patterns = [];
-var numPatterns = 4;
-for (var i = 0; i < 4; i++) {
+for (var i = 0; i < 99; i++) { //max 99 patterns
     var pattern = {};
     pattern['nodes'] = [];
     pattern['links'] = 0;
@@ -91,14 +89,14 @@ this.vis.append('svg:g').attr('class', 'linkContainer');
 this.vis.append('svg:g').attr('class', 'nodeContainer');
 
 this.forceLayout = d3.layout.force().size([1200, 800]).nodes([]).links([])
-    // .linkDistance(30)
-    // .charge(function (d) {
-    //     var charge = -500;
-    //     if (d.type == 1) charge = 10 * charge;
-    //     return charge;
-    // }).on("tick", this._tick.bind(this));
-.charge(-4000)
- .on("tick", this._tick.bind(this));
+// .linkDistance(30)
+// .charge(function (d) {
+//     var charge = -500;
+//     if (d.type == 1) charge = 10 * charge;
+//     return charge;
+// }).on("tick", this._tick.bind(this));
+    .charge(-4000)
+    .on("tick", this._tick.bind(this));
 
 /* Globals End */
 
@@ -138,7 +136,7 @@ function addNode(type, pattern) {
         number: number,
         type: type,
         status: true,
-        pattern: 'P' + ("0" + pattern).slice(-2),
+        pattern: convertPatternToString(pattern),
         // x: Math.cos(patterns[pattern].nodes.length / numPatterns * 2 * Math.PI) * 200 + 1200 / 2 + Math.random(),
         // y: Math.sin(patterns[pattern].nodes.length / numPatterns * 2 * Math.PI) * 200 + 800 / 2 + Math.random()
         x: Math.random(),
@@ -166,18 +164,15 @@ function addNode(type, pattern) {
         this.addLink(nodes[size - 1].id, nodes[size - 2].id);
     }
 
-
     let data = {
         'link': []
     }
-    console.log(this.forceLayout.links())
     data.link = this.forceLayout.links()
     if (patterns[pattern].nodes.length === 1) {
-        console.log('conn')
-        // Adding a connector node
+        // Adding a new connector node
         data.link.push({
-            'source': {'id': id, 'number': number, 'pattern': pattern, 'type': 1},
-            'target': {'id': id, 'number': number, 'pattern': pattern, 'type': 1}
+            'source': {'id': id, 'number': number, 'pattern': convertPatternToString(pattern), 'type': 1},
+            'target': {'id': id, 'number': number, 'pattern': convertPatternToString(pattern), 'type': 1}
         })
     }
     $.ajax({
@@ -339,7 +334,8 @@ function _redraw() {
 function draw(nodes, links) {
     nodes.forEach(function (e) {
         this.forceLayout.nodes().push(e)
-        patterns[parseInt(e.pattern.substr(1), 10)].nodes.push(e)
+        let pattern = convertPatternToInt(e.pattern)
+        patterns[pattern].nodes.push(e)
     });
     links.forEach(function (e) {
         let source = find(e.source.id)
@@ -414,6 +410,14 @@ function _nextID() {
         id++;
     }
     return id;
+}
+
+function convertPatternToString(patId) {
+    return 'P' + ("0" + patId).slice(-2)
+}
+
+function convertPatternToInt(pattern) {
+    return parseInt(pattern.substr(1), 10)
 }
 
 //find the node index
