@@ -47,8 +47,8 @@ $.ajax({
                 pattern: e.pattern, //parseInt(e.pattern.substr(1), 10),
                 // x: Math.cos(patterns[pattern].nodes.length / numPatterns * 2 * Math.PI) * 200 + 1200 / 2 + Math.random(),
                 // y: Math.sin(patterns[pattern].nodes.length / numPatterns * 2 * Math.PI) * 200 + 800 / 2 + Math.random()
-                x: Math.random(),
-                y: Math.random()
+                // x: Math.random(),
+                // y: Math.random()
             };
             nodelist.push(node)
         });
@@ -80,25 +80,25 @@ for (var i = 0; i < 4; i++) {
 }
 
 //this.canvas = d3.select('#canvas').append('svg:svg').attr('width', '1200').attr('height', '800');
-var svg = d3.select('#canvas').append('svg:svg').attr('width', '100%').attr('height', '100%')
+var svg = d3.select('#canvas').append('svg').attr('width', '100%').attr('height', '100%')
     .call(d3.behavior.zoom().on("zoom", function () {
         svg.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")")
     }))
+    .append("g")
 this.vis = svg.append('svg:g');
 
 this.vis.append('svg:g').attr('class', 'linkContainer');
 this.vis.append('svg:g').attr('class', 'nodeContainer');
 
 this.forceLayout = d3.layout.force().size([1200, 800]).nodes([]).links([])
-   // .linkDistance(100)
+    // .linkDistance(30)
     // .charge(function (d) {
-    //     console.log(d)
-    //     var charge = 0;
-    //     if (d.type == 1) charge = -4000;
+    //     var charge = -500;
+    //     if (d.type == 1) charge = 10 * charge;
     //     return charge;
     // }).on("tick", this._tick.bind(this));
-    .charge(-4000)
-    .on("tick", this._tick.bind(this));
+.charge(-4000)
+ .on("tick", this._tick.bind(this));
 
 /* Globals End */
 
@@ -364,8 +364,10 @@ function _updateNodes(nodeList) {
         sel.each(function (d) {
             const node = d3.select(this);
             //if(node.type == 1) node.classed("fixed", d.fixed = true);
-            node.append('circle').attr('r', 0).style('fill', d => d.type === 1 ? "blue" : "white")
-                .transition().duration(750).ease('elastic').attr('r', 20);
+            node.append('circle').attr('r', 0)
+                .style('fill', d => d.type === 1 ? "blue" : "white")
+                .transition().duration(750).ease('elastic')
+                .attr('r', 20);
             node.append('text')
                 .text(node => node.number)
                 .attr('font-size', 8)
