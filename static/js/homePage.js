@@ -20,48 +20,10 @@
     }
 }()
 
-// GET current nodes in database
-$.ajax({
-    url: "/homepage/get/", // the endpoint
-    type: "GET", // http method
+this.getNodes()
 
-    // handle a successful response
-    success: function (response) {
-        if (response == '') return
-        console.log(JSON.parse(response))
-        var nodes = JSON.parse(response)
-        let nodelist = []
+setInterval(this.getRandomNodes, 10000); // Randomly activates node
 
-        nodes.node.forEach(function (e) {
-            let numNodes = 7, i = 0, currentPattern = 1
-            if (convertPatternToInt(e.pattern) != currentPattern) {
-                i = 0
-                currentPattern = convertPatternToInt(e.pattern)
-            }
-
-            const node = {
-                id: e.id,
-                number: e.number, //parseInt(e.number.substr(1), 10),
-                type: e.type,
-                status: e.status,
-                pattern: e.pattern, //parseInt(e.pattern.substr(1), 10),
-                // x: Math.cos(patterns[pattern].nodes.length / numPatterns * 2 * Math.PI) * 200 + 1200 / 2 + Math.random(),
-                // y: Math.sin(patterns[pattern].nodes.length / numPatterns * 2 * Math.PI) * 200 + 800 / 2 + Math.random()
-                // x: Math.random(),
-                // y: Math.random()
-            };
-            nodelist.push(node)
-        });
-        draw(nodelist, nodes.link)
-    },
-
-    // handle a non-successful response
-    error: function (xhr, errmsg, err) {
-        $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: " + errmsg +
-            " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
-        console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
-    }
-});
 
 $('#logout').on('click', function () {
     window.location.href = '/homepage/logout/'
@@ -220,6 +182,104 @@ function addLink(s, l) {
     this._redraw();
 }
 
+function getNodes() {
+    // GET current nodes in database
+    $.ajax({
+        url: "/homepage/get/", // the endpoint
+        type: "GET", // http method
+
+        // handle a successful response
+        success: function (response) {
+            if (response == '') return
+            console.log(JSON.parse(response))
+            var json = JSON.parse(response)
+            let nodelist = []
+
+            json.node.forEach(function (e) {
+                let numNodes = 7, i = 0, currentPattern = 1
+                if (convertPatternToInt(e.pattern) != currentPattern) {
+                    i = 0
+                    currentPattern = convertPatternToInt(e.pattern)
+                }
+                const node = {
+                    id: e.id,
+                    number: e.number,
+                    type: e.type,
+                    status: e.status,
+                    pattern: e.pattern,
+                };
+                nodelist.push(node)
+            });
+            draw(nodelist, json.link)
+        },
+
+        // handle a non-successful response
+        error: function (xhr, errmsg, err) {
+            $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: " + errmsg +
+                " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+            console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+        }
+    });
+}
+
+function getRandomNodes() {
+    $.ajax({
+        url: "/homepage/get/", // the endpoint
+        type: "GET", // http method
+
+        // handle a successful response
+        success: function (response) {
+            if (response == '') return
+            var json = JSON.parse(response)
+            json.node.forEach(function (e) {
+                if (Math.random() < 0.25) e.status = false
+            });
+
+            updateStatus(json.node)
+        },
+
+        // handle a non-successful response
+        error: function (xhr, errmsg, err) {
+            $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: " + errmsg +
+                " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+            console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+        }
+    });
+}
+
+// Updates the status (active/inactive) randomly of nodes
+function updateStatus(newNodes) {
+    this.forceLayout.nodes().forEach(function (node, index) {
+        newNodes.forEach(function (j) {
+            if (node.id == j.id)
+                node.status = j.status
+        })
+    });
+    const nodes = this.forceLayout.nodes()
+    const sel = this.vis.select('.nodeContainer').selectAll('.node');
+
+    //update status
+    sel.each(function (d) {
+        const node = d3.select(this);
+        node.append('circle').attr('r', 0)
+            .style('fill', d => d.type == 1 ? "blue" : (d.status == true ? "white" : "red"))
+            .transition().duration(750).ease('elastic')
+            .attr('r', 20);
+        node.append('text')
+            .text(node => node.number)
+            .attr('font-size', 8)
+            .attr('dx', -6)
+            .attr('dy', 4)
+        node.append('text')
+            .text(node => node.type === 1 ? "" + node.pattern : '')
+            .attr('font-size', 8)
+            .attr('fill', 'black')
+            .attr('dx', 25)
+            .attr('dy', 4)
+    })
+    this._redraw()
+}
+
 function moveConnectorTo(pattern, s, t) {
     let nodes = this.forceLayout.nodes();
     let source = -1, target = -1;
@@ -330,7 +390,7 @@ function _redraw() {
     this.forceLayout.start();
 }
 
-//Draws nodes and links from database on GET
+//Draws nodes and links from database on GET page load
 function draw(nodes, links) {
     nodes.forEach(function (e) {
         this.forceLayout.nodes().push(e)
@@ -340,7 +400,6 @@ function draw(nodes, links) {
     links.forEach(function (e) {
         let source = find(e.source.id)
         let target = find(e.target.id)
-
         this.forceLayout.links().push({
             source, target
         });
@@ -349,8 +408,8 @@ function draw(nodes, links) {
 }
 
 
-function _updateNodes(nodeList) {
-    const nodes = nodeList == null ? this.forceLayout.nodes() : nodeList
+function _updateNodes() {
+    const nodes = this.forceLayout.nodes()
     const sel = this.vis.select('.nodeContainer').selectAll('.node');
     const binding = sel.data(nodes, function (d) {
         return d.id
@@ -359,9 +418,9 @@ function _updateNodes(nodeList) {
     binding.enter().insert('g').attr('class', 'node').style('z-index', 1).call(sel => {
         sel.each(function (d) {
             const node = d3.select(this);
-            //if(node.type == 1) node.classed("fixed", d.fixed = true);
+            // if(d.type == 1) node.classed("fixed", d.fixed = true);
             node.append('circle').attr('r', 0)
-                .style('fill', d => d.type === 1 ? "blue" : "white")
+                .style('fill', d => d.type == 1 ? "blue" : (d.status == true ? "white" : "red"))
                 .transition().duration(750).ease('elastic')
                 .attr('r', 20);
             node.append('text')
@@ -384,8 +443,8 @@ function _updateNodes(nodeList) {
 
 }
 
-function _updateLinks(linkList) {
-    const layout_links = linkList == null ? this.forceLayout.links() : linkList
+function _updateLinks() {
+    const layout_links = this.forceLayout.links()
     const links = this.vis.select('.linkContainer').selectAll(".link").data(layout_links);
     links.enter().insert('line').attr('class', 'link').style('stroke', 'white').style('stroke-width', 5)
         .attr('x1', d => d.source.x).attr('y1', d => d.source.y).attr('x2', d => d.target.x).attr('y2', d => d.target.y);
