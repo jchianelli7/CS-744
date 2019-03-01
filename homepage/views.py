@@ -5,6 +5,7 @@ from homepage.models import *
 import json
 import simplejson
 from django.http import HttpResponse
+import  random
 from django.template.loader import render_to_string
 
 
@@ -12,7 +13,7 @@ from django.template.loader import render_to_string
 
 def homepage(request):
     if (request.COOKIES.get('username') == None or request.COOKIES.get('is_superuser') == None):
-        respongitse = redirect('/homepage/logout/')
+        response = redirect('/homepage/logout/')
     else:
         user = User
         user.username = request.COOKIES.get('username')
@@ -32,7 +33,7 @@ def homepage(request):
 
 def get(request):
     if (request.COOKIES.get('username') == None or request.COOKIES.get('is_superuser') == None):
-        respongitse = redirect('/homepage/logout/')
+        response = redirect('/homepage/logout/')
     else:
         user = User
         user.username = request.COOKIES.get('username')
@@ -68,7 +69,6 @@ def addNode(request):
             userStatus = request.COOKIES.get('is_superuser')
             user = request.COOKIES.get('username')
             request = simplejson.loads(request.body)
-            # user = User.objects.filter(username=request.COOKIES.get('username'))[0]
             nodeList = request['link']
             for i in Node.objects.all():
                 i.link.clear()
@@ -101,31 +101,95 @@ def addNode(request):
             response.set_cookie('username', user)
     return response
 
+#delete should be test
+def deleteNode(request):
+    if(request.COOKIES.get('username') == None or request.COOKIES.get('is_superuser') == None):
+        response = redirect('/homepage/logout/')
+    else:
+        try:
+            userStatus = request.COOKIES.get('is_superuser')
+            user = request.COOKIES.get('username')
+            request = simplejson.loads(request.body)
+            nodeList = request['link']
+            for i in nodeList:
+                try:
+                    node=Node.objects.filter(number=i['source']['number'])[0]
+                    node.delete()
+                except IndexError:
+                    response=HttpResponse(json.dumps({'message':'the node for deleting is not exists.'}))
+                except Node.nodeError as e:
+                    response=HttpResponse(json.dumps({'message':e}))
+
+        except simplejson.JSONDecodeError:
+            pass
+        else:
+            pass
+        finally:
+            linkList = []
+            nodeList = []
+            if (Node.objects.count() > 0):
+                for i in Node.objects.all():
+                    node = {'id': i.id, 'number': i.number, 'type': i.type, 'status': i.status, 'pattern': i.pattern}
+                    nodeList.append(node)
+                    for target in i.link.all():
+                        dict = {'source': {'id': i.id, 'number': i.number, 'type': i.type, 'status': i.status,
+                                           'pattern': i.pattern},
+                                'target': {'id': target.id, 'number': target.number, 'type': target.type,
+                                           'status': target.status, 'pattern': target.pattern}}
+                        linkList.append(dict)
+
+                    resp = {'node': nodeList, 'link': linkList}
+            response=HttpResponse(json.dumps(resp))
+            response.set_cookie('is_superuser', userStatus)
+            response.set_cookie('username', user)
+    return response
+
+
+
+def inactiveNode(request):
+    if (request.COOKIES.get('username') == None or request.COOKIES.get('is_superuser') == None):
+        response = redirect('/homepage/logout/')
+    else:
+        try:
+            node=Node.objects.filter(id=random.randint(1,Node.objects.count()))[0]
+            if(random.randint(0,2)==1 and node.status==True):
+                node.status=False
+                node.save()
+            else:
+                raise Node.nodeError
+        except IndexError and Node.nodeError:
+            response=HttpResponse()
+        else:
+            list=[{'id': node.id, 'number': node.number, 'type': node.type, 'status': node.status, 'pattern': node.pattern}]
+            response=HttpResponse(json.dumps({'node':list}))
+        finally:
+            pass
+    return response
+
+def activeNode(request):
+    if (request.COOKIES.get('username') == None or request.COOKIES.get('is_superuser') == None):
+        response = redirect('/homepage/logout/')
+    else:
+        try:
+            request = simplejson.loads(request.body)
+            nodeList = request['link']
+            for i in nodeList:
+                node=Node.objects.filter(number=i['source']['number'])[0]
+                node.status=True
+                node.save()
+        except IndexError:
+            response=HttpResponse(json.dumps({'message':'node did not exists'}))
+        except simplejson.JSONDecodeError:
+            response=HttpResponse()
+        finally:
+            list = [{'id': node.id, 'number': node.number, 'type': node.type, 'status': node.status,
+                     'pattern': node.pattern}]
+            response=HttpResponse(json.dumps({'node': list}))
+    return response
+
 
 def deleteLink(request):
-    # if(request.COOKIES.get('username') == None or request.COOKIES.get('is_superuser') == None):
-    #     response = redirect('/homepage/logout/')
-    # else:
-    try:
-        request = simplejson.loads(request.body)
-        # user = User.objects.filter(username=request.COOKIES.get('username'))[0]
-        # if(user.is_superuser==False):
-        # raise Path.deleteLinkError('the user have no permission to delete link')
-        path = Path
-        path.deleteLink(path, node1=request['node1'], node2=request['node2'])
-        response = HttpResponse()
-    except simplejson.JSONDecodeError:
-        response = HttpResponse()
-    except IndexError:
-        print('user name is not exist')
-        response = redirect('/homepage/logout/')
-    except Path.deleteLinkError as e:
-        response = HttpResponse(json.dumps(e))
-    finally:
-        # response.set_cookie('is_superuser', user.is_superuser)
-        # response.set_cookie('username', user.username)
-
-        return response
+    pass
 
 
 def logout(request):
