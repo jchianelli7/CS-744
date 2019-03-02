@@ -22,7 +22,7 @@
 
 this.getNodes()
 
-setInterval(this.getRandomNodes, 10000); // Randomly activates node
+setInterval(this.randomInactiveNodes, 10000); // Randomly activates node
 
 
 $('#logout').on('click', function () {
@@ -85,6 +85,12 @@ document.querySelector('#btn_delete').addEventListener('click', e => {
     var id = document.getElementById("delete").value;
     this.deleteNode(pattern, id);
 });
+
+document.querySelector('#btn_node_active').addEventListener('click', e => {
+    var id = document.getElementById("active").value;
+    this.activateNode(id);
+});
+
 
 /* Button Event End */
 
@@ -222,10 +228,40 @@ function getNodes() {
     });
 }
 
-function getRandomNodes() {
+function activateNode(id) {
+    let data = {
+        'node': []
+    }
+    const node = {
+        id: id,
+    };
+    data.node.push(node)
+
+    $.ajax({
+        url: "/homepage/activeNode/", // the endpoint
+        type: "Post", // http method
+        data: JSON.stringify(data),
+
+        // handle a successful response
+        success: function (response) {
+            if (response == '') return
+            var json = JSON.parse(response)
+            updateStatus(json.node)
+        },
+
+        // handle a non-successful response
+        error: function (xhr, errmsg, err) {
+            // console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+            $(this).trigger(M.toast({html: xhr.responseJSON.message}))
+
+        }
+    });
+}
+
+function randomInactiveNodes() {
     $.ajax({
         url: "/homepage/inactiveNode/", // the endpoint
-       type: "Post", // http method
+        type: "Post", // http method
 
         // handle a successful response
         success: function (response) {

@@ -188,19 +188,33 @@ def activeNode(request):
     else:
         try:
             request = simplejson.loads(request.body)
-            nodeList = request['link']
-            for i in nodeList:
-                node = Node.objects.filter(number=i['source']['number'])[0]
+            # nodeList = request['link']
+            # for i in nodeList:
+            #     node = Node.objects.filter(number=i['source']['number'])[0]
+            #     node.status = True
+            #     node.save()
+            node = request['node'][0]
+            node = Node.objects.filter(id=node['id'])[0]
+            if (node.status == False):
                 node.status = True
                 node.save()
+            else:
+                return bad_request(message='Error: Cannot activate inactive node')
+            # Return list of all nodes
+            nodeList = []
+            for i in Node.objects.all():
+                node = {'id': i.id, 'number': i.number, 'type': i.type, 'status': i.status, 'pattern': i.pattern}
+                nodeList.append(node)
+
         except IndexError:
-            response = HttpResponse(json.dumps({'message': 'node did not exists'}))
+            return bad_request(message='Error: Node does not exist')
+            #response = HttpResponse(json.dumps({'message': 'node did not exists'}))
         except simplejson.JSONDecodeError:
             response = HttpResponse()
-        finally:
-            list = [{'id': node.id, 'number': node.number, 'type': node.type, 'status': node.status,
-                     'pattern': node.pattern}]
-            response = HttpResponse(json.dumps({'node': list}))
+        else:
+            # list = [{'id': node.id, 'number': node.number, 'type': node.type, 'status': node.status,
+            #          'pattern': node.pattern}]
+            response = HttpResponse(json.dumps({'node': nodeList}))
     return response
 
 
@@ -212,3 +226,10 @@ def logout(request):
     request = redirect('/login/loginPage/')
     request.cookies.clear()
     return request
+
+
+def bad_request(message):
+    response = HttpResponse(json.dumps({'message': message}),
+                            content_type='application/json')
+    response.status_code = 400
+    return response
