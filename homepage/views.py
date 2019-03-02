@@ -5,7 +5,7 @@ from homepage.models import *
 import json
 import simplejson
 from django.http import HttpResponse
-import  random
+import random
 from django.template.loader import render_to_string
 
 
@@ -101,9 +101,10 @@ def addNode(request):
             response.set_cookie('username', user)
     return response
 
-#delete should be test
+
+# delete should be test
 def deleteNode(request):
-    if(request.COOKIES.get('username') == None or request.COOKIES.get('is_superuser') == None):
+    if (request.COOKIES.get('username') == None or request.COOKIES.get('is_superuser') == None):
         response = redirect('/homepage/logout/')
     else:
         try:
@@ -113,12 +114,12 @@ def deleteNode(request):
             nodeList = request['link']
             for i in nodeList:
                 try:
-                    node=Node.objects.filter(number=i['source']['number'])[0]
+                    node = Node.objects.filter(number=i['source']['number'])[0]
                     node.delete()
                 except IndexError:
-                    response=HttpResponse(json.dumps({'message':'the node for deleting is not exists.'}))
+                    response = HttpResponse(json.dumps({'message': 'the node for deleting is not exists.'}))
                 except Node.nodeError as e:
-                    response=HttpResponse(json.dumps({'message':e}))
+                    response = HttpResponse(json.dumps({'message': e}))
 
         except simplejson.JSONDecodeError:
             pass
@@ -139,11 +140,10 @@ def deleteNode(request):
                         linkList.append(dict)
 
                     resp = {'node': nodeList, 'link': linkList}
-            response=HttpResponse(json.dumps(resp))
+            response = HttpResponse(json.dumps(resp))
             response.set_cookie('is_superuser', userStatus)
             response.set_cookie('username', user)
     return response
-
 
 
 def inactiveNode(request):
@@ -151,20 +151,36 @@ def inactiveNode(request):
         response = redirect('/homepage/logout/')
     else:
         try:
-            node=Node.objects.filter(id=random.randint(1,Node.objects.count()))[0]
-            if(random.randint(0,2)==1 and node.status==True):
-                node.status=False
-                node.save()
-            else:
-                raise Node.nodeError
+            # node = Node.objects.filter(id=random.randint(1, Node.objects.count()))[0] #ID might not be within count
+            # if (random.randint(0, 2) == 1 and node.status == True):
+            #     if (random.randint(0, 2) == 1 and node.status == True):
+            #         node.status = False
+            #         node.save()
+            #     else:
+            #         raise Node.nodeError
+            for i in Node.objects.all():
+                i.status = True
+                i.save()
+
+            nonconnectors = [x for x in Node.objects.all() if (x.type == 0 and x.status == True)]
+            node = random.choice(nonconnectors)
+            node.status = False
+            node.save()
+
+            nodeList = []
+            for i in Node.objects.all():
+                node = {'id': i.id, 'number': i.number, 'type': i.type, 'status': i.status, 'pattern': i.pattern}
+                nodeList.append(node)
         except IndexError and Node.nodeError:
-            response=HttpResponse()
+            response = HttpResponse()
         else:
-            list=[{'id': node.id, 'number': node.number, 'type': node.type, 'status': node.status, 'pattern': node.pattern}]
-            response=HttpResponse(json.dumps({'node':list}))
+            # list = [{'id': node.id, 'number': node.number, 'type': node.type, 'status': node.status,
+            #          'pattern': node.pattern}]
+            response = HttpResponse(json.dumps({'node': nodeList}))
         finally:
             pass
     return response
+
 
 def activeNode(request):
     if (request.COOKIES.get('username') == None or request.COOKIES.get('is_superuser') == None):
@@ -174,17 +190,17 @@ def activeNode(request):
             request = simplejson.loads(request.body)
             nodeList = request['link']
             for i in nodeList:
-                node=Node.objects.filter(number=i['source']['number'])[0]
-                node.status=True
+                node = Node.objects.filter(number=i['source']['number'])[0]
+                node.status = True
                 node.save()
         except IndexError:
-            response=HttpResponse(json.dumps({'message':'node did not exists'}))
+            response = HttpResponse(json.dumps({'message': 'node did not exists'}))
         except simplejson.JSONDecodeError:
-            response=HttpResponse()
+            response = HttpResponse()
         finally:
             list = [{'id': node.id, 'number': node.number, 'type': node.type, 'status': node.status,
                      'pattern': node.pattern}]
-            response=HttpResponse(json.dumps({'node': list}))
+            response = HttpResponse(json.dumps({'node': list}))
     return response
 
 

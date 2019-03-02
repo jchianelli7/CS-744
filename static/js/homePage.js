@@ -224,17 +224,13 @@ function getNodes() {
 
 function getRandomNodes() {
     $.ajax({
-        url: "/homepage/get/", // the endpoint
-        type: "GET", // http method
+        url: "/homepage/inactiveNode/", // the endpoint
+       type: "Post", // http method
 
         // handle a successful response
         success: function (response) {
             if (response == '') return
             var json = JSON.parse(response)
-            json.node.forEach(function (e) {
-                if (Math.random() < 0.25) e.status = false
-            });
-
             updateStatus(json.node)
         },
 
