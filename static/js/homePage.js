@@ -51,12 +51,6 @@ this.vis.append('svg:g').attr('class', 'linkContainer');
 this.vis.append('svg:g').attr('class', 'nodeContainer');
 
 this.forceLayout = d3.layout.force().size([1200, 800]).nodes([]).links([])
-// .linkDistance(30)
-// .charge(function (d) {
-//     var charge = -500;
-//     if (d.type == 1) charge = 10 * charge;
-//     return charge;
-// }).on("tick", this._tick.bind(this));
     .charge(-4000)
     .on("tick", this._tick.bind(this));
 
@@ -64,7 +58,8 @@ this.forceLayout = d3.layout.force().size([1200, 800]).nodes([]).links([])
 
 /* Button Event Start */
 document.querySelector('#btn_node').addEventListener('click', e => {
-    var pattern = document.getElementById("pattern").value;
+    var e = document.getElementById("add_pattern_dropdown");
+    var pattern = e.options[e.selectedIndex].value;
     if (patterns[pattern].nodes.length === 0) {
         // 0 is non-connector, 1 is connector
         this.addNode(1, pattern);
@@ -74,20 +69,23 @@ document.querySelector('#btn_node').addEventListener('click', e => {
 });
 
 document.querySelector('#btn_link').addEventListener('click', e => {
-    var pattern = document.getElementById("pattern").value;
-    var source = document.getElementById("source").value;
-    var target = document.getElementById("target").value;
-    this.moveConnectorTo(pattern, source, target);
+    var e = document.getElementById("add_source");
+    var source = e.options[e.selectedIndex].value;
+    var f = document.getElementById("add_target");
+    var target = f.options[f.selectedIndex].value;
+    this.createLink(source, target)
 });
-
-document.querySelector('#btn_delete').addEventListener('click', e => {
-    var pattern = document.getElementById("pattern").value;
-    var id = document.getElementById("delete").value;
-    this.deleteNode(pattern, id);
-});
+//
+// document.querySelector('#btn_delete').addEventListener('click', e => {
+//     var pattern = document.getElementById("pattern").value;
+//     var id = document.getElementById("delete").value;
+//     this.deleteNode(pattern, id);
+// });
 
 document.querySelector('#btn_node_active').addEventListener('click', e => {
-    var id = document.getElementById("active").value;
+    console.log('click')
+    var e = document.getElementById("activate_dropdown");
+    var id = e.options[e.selectedIndex].value;
     this.activateNode(id);
 });
 
@@ -95,9 +93,9 @@ document.querySelector('#btn_node_active').addEventListener('click', e => {
 /* Button Event End */
 
 function addNode(type, pattern) {
-    if (patterns[pattern].nodes.length === 7) return; //no more than 7 nodes
+    if (patterns[pattern].nodes.length === 7) $(this).trigger(M.toast({html: 'Error: Pattern cannot contain more than 7 nodes'})); //no more than 7 nodes
     let id = this._nextID()
-    let number = 'N' + ("0" + this._nextID()).slice(-2);
+    let number = 'N' + ("0" + id).slice(-2);
 
     const node = {
         id: id,
@@ -105,8 +103,6 @@ function addNode(type, pattern) {
         type: type,
         status: true,
         pattern: convertPatternToString(pattern),
-        // x: Math.cos(patterns[pattern].nodes.length / numPatterns * 2 * Math.PI) * 200 + 1200 / 2 + Math.random(),
-        // y: Math.sin(patterns[pattern].nodes.length / numPatterns * 2 * Math.PI) * 200 + 800 / 2 + Math.random()
         x: Math.random(),
         y: Math.random()
     };
@@ -137,11 +133,12 @@ function addNode(type, pattern) {
     }
     data.link = this.forceLayout.links()
     if (patterns[pattern].nodes.length === 1) {
+        // TODO: This could be a problem, but you cant just create one
         // Adding a new connector node
-        data.link.push({
-            'source': {'id': id, 'number': number, 'pattern': convertPatternToString(pattern), 'type': 1},
-            'target': {'id': id, 'number': number, 'pattern': convertPatternToString(pattern), 'type': 1}
-        })
+        // data.link.push({
+        //     'source': {'id': id, 'number': number, 'pattern': convertPatternToString(pattern), 'type': 1},
+        //     'target': {'id': id, 'number': number, 'pattern': convertPatternToString(pattern), 'type': 1}
+        // })
     }
     $.ajax({
         url: "/homepage/addNode/", // the endpoint
@@ -196,7 +193,10 @@ function getNodes() {
 
         // handle a successful response
         success: function (response) {
-            if (response == '') return
+            if (response == '') {
+                updateDropDown([], [])
+                return
+            }
             console.log(JSON.parse(response))
             var json = JSON.parse(response)
             let nodelist = []
@@ -229,6 +229,7 @@ function getNodes() {
 }
 
 function activateNode(id) {
+    console.log(id)
     let data = {
         'node': []
     }
@@ -259,6 +260,12 @@ function activateNode(id) {
 }
 
 function randomInactiveNodes() {
+    var exists = false
+    this.forceLayout.nodes().forEach(function (e) {
+        if (e.type == 0)
+            exists = true
+    });
+    if (!exists) return
     $.ajax({
         url: "/homepage/inactiveNode/", // the endpoint
         type: "Post", // http method
@@ -312,35 +319,49 @@ function updateStatus(newNodes) {
     this._redraw()
 }
 
-function moveConnectorTo(pattern, s, t) {
-    let nodes = this.forceLayout.nodes();
+function createLink(s, t) {
     let source = -1, target = -1;
 
-    if (!this._findLink(patterns[pattern].nodes[0].id, s)) {
-        console.error('source is not linked with connector');
-        return
-    }
-
-    //Remove old link from connector to source
-    this.removeLinkBetween(nodes[s].id, patterns[pattern].nodes[0].id);
-
-    //Check and add new link
-    if (this._verifyNewLink(nodes[t].id, patterns[pattern].nodes[0].id)) {
-        // source = patterns[pattern].nodes[0].id;
-        // target = nodes[t].id;
-        source = find(patterns[pattern].nodes[0].id)
-        target = find(nodes[t].id)
+    if (this._verifyNewLink(s, t)) {
+        source = find(s)
+        target = find(t)
     } else {
-        console.error('unable to create link');
+        $(this).trigger(M.toast({html: 'Error: Cannot create link'}))
         return
     }
-
 
     this.forceLayout.links().push({
         source, target
     });
+    this._updateLinks()
+    console.log(this.forceLayout.links())
+    let data = {
+        'link': []
+    }
+    data.link = this.forceLayout.links()
+    $.ajax({
+        url: "/homepage/addNode/", // the endpoint
+        type: "POST", // http method
+        data: JSON.stringify(data),
+
+        // handle a successful response
+        success: function (response) {
+            // console.log(JSON.parse(response)) // log the returned json to the console
+            console.log("success"); // another sanity check
+            _redraw()
+        },
+
+        // handle a non-successful response
+        error: function (xhr, errmsg, err) {
+            $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: " + errmsg +
+                " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+            console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+        }
+    });
 
     this._redraw();
+
+
 }
 
 function _verifyNewLink(source, target) {
@@ -439,7 +460,6 @@ function draw(nodes, links) {
     this._redraw()
 }
 
-
 function _updateNodes() {
     const nodes = this.forceLayout.nodes()
     const sel = this.vis.select('.nodeContainer').selectAll('.node');
@@ -470,6 +490,8 @@ function _updateNodes() {
     }).call(this.forceLayout.drag);
 
     binding.exit().remove();
+
+    this.updateDropDown(nodes, this.forceLayout.links())
 
     this.forceLayout.start();
 
@@ -519,6 +541,61 @@ function find(f) {
             i = index;
     });
     return i;
+}
+
+function updateDropDown(nodes, link) {
+    // Add Pattern
+    let numPatterns = 0
+    var select = document.getElementById("add_pattern_dropdown");
+    $('#add_pattern_dropdown').empty()
+
+    nodes.forEach(function (name, value) {
+        if (name.type == 1) {
+            numPatterns++
+            var option = document.createElement('option');
+            option.text = name.pattern;
+            option.value = convertPatternToInt(name.pattern)
+            select.add(option, 0);
+        }
+    })
+    var option = document.createElement('option');
+    option.text = 'New Pattern'
+    option.value = numPatterns + 1;
+    select.add(option, 0);
+
+    // Activate node
+    var select = document.getElementById("activate_dropdown");
+    $('#activate_dropdown').empty()
+    nodes.forEach(function (name, value) {
+        if (name.type == 0) {
+            var option = document.createElement('option');
+            option.text = name.number;
+            option.value = name.id
+            select.add(option, 0);
+        }
+    })
+
+    // Links
+    $('#add_source').empty()
+    $('#add_target').empty()
+    var selectSource = document.getElementById("add_source");
+    nodes.forEach(function (name, value) {
+        var option = document.createElement('option');
+        option.text = name.number;
+        option.value = name.id
+        selectSource.add(option, 0);
+    })
+
+    var selectTarget = document.getElementById("add_target");
+    nodes.forEach(function (name, value) {
+        var option = document.createElement('option');
+        option.text = name.number;
+        option.value = name.id
+        selectTarget.add(option, 0);
+    })
+
+    $('select').formSelect();
+
 }
 
 

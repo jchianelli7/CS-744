@@ -1,3 +1,121 @@
+{#<!DOCTYPE html>#}
+{#<html lang="en">#}
+{#<head>#}
+{#    <meta charset="UTF-8">#}
+{#    <meta http-equiv="cache-control" content="max-age=0">#}
+{#    <meta http-equiv="cache-control" content="no-cache">#}
+{#    <meta http-equiv="expires" content="-1">#}
+{#    <meta http-equiv="expires" content="Tue, 01 Jan 1980 11:00:00 GMT">#}
+{#    <meta http-equiv="pragma" content="no-cache">#}
+{##}
+{#    <title>Title</title>#}
+{#    <link rel='stylesheet' href='//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css'>#}
+{#    <style class="cp-pen-styles">#}
+{##}
+{#        #canvas {#}
+{#            width: 1200px;#}
+{#            height: 800px;#}
+{#            border: 1px solid #fff;#}
+{#            margin: 10px 0;#}
+{#            background-color: #bbc3ce;#}
+{#            padding: 10px;#}
+{#            overflow: hidden;#}
+{#        }#}
+{##}
+{#        .to {#}
+{#            background-color: #26a69a;#}
+{#        }#}
+{##}
+{##}
+{#    </style>#}
+{#</head>#}
+{#<!--<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">-->#}
+{##}
+{#<link href="../../static/css/materialize.css" rel="stylesheet">#}
+{#<link href="../../static/css/homePageSideNav.css" rel="stylesheet">#}
+{#<body>#}
+{#<!--sidenav start here-->#}
+{#<div class="sideNav hoverable">#}
+{#    <div class="container">#}
+{#        <div class="row">#}
+{#            <div class="col s12">#}
+{#                <!--title for user-->#}
+{#                <h6 id="userStatus" class="valign-wrapper"></h6>#}
+{#                <!--logout button-->#}
+{#                <button id="logout" class="waves-effect waves-light btn">Logout</button>#}
+{#            </div>#}
+{#        </div>#}
+{#        <!--function interface start here-->#}
+{#        <div class="row">#}
+{#            <div class="col pull-s1 s12" id="admin">#}
+{#                <ul class="collapsible">#}
+{#                    <li>#}
+{#                        <!--add function start here-->#}
+{#                        <div class="collapsible-header"><i class="material-icons">Add</i></div>#}
+{#                        <div class="collapsible-body">#}
+{#                            <!--add node button-->#}
+{#                            <button id="btn_node" class="waves-effect waves-light btn" style="margin-left: -19% ">Node#}
+{#                            </button>#}
+{#                        </div>#}
+{#                    </li>#}
+{#                    <li>#}
+{#                        <!--delete function start here-->#}
+{#                        <div class="collapsible-header"><i class="material-icons">Delete</i></div>#}
+{#                        <div class="collapsible-body">#}
+{#                            <button class="btn btn-primary" id="btn_delete">Delete Node</button>#}
+{#                            <input id="delete" type="number" placeholder="Node ID" value="">#}
+{#                        </div>#}
+{#                    </li>#}
+{#                    <li>#}
+{#                        <!--update function start here-->#}
+{#                        <div class="collapsible-header"><i class="material-icons">Move</i></div>#}
+{#                        <div class="collapsible-body">#}
+{#                            <button class="btn btn-primary" id="btn_link">Move Connector From</button>#}
+{#                            <input id="source" type="number" placeholder="Source Node" value="">#}
+{#                            <span class="label to">To</span>#}
+{#                            <input id="target" type="number" placeholder="Target Node" value="">#}
+{#                        </div>#}
+{#                    </li>#}
+{#                    <li>#}
+{#                        <!--update function start here-->#}
+{#                        <div class="collapsible-header"><i class="material-icons">Pattern</i></div>#}
+{#                        <div class="collapsible-body">#}
+{#                            <input id="pattern" type="number" placeholder="Pattern" value="1">#}
+{#                        </div>#}
+{#                    </li>#}
+{#                    <li>#}
+{#                        <!--delete function start here-->#}
+{#                        <div class="collapsible-header"><i class="material-icons">Activate</i></div>#}
+{#                        <div class="collapsible-body">#}
+{#                            <button class="btn btn-primary" id="btn_node_active">Activate</button>#}
+{#                            <input id="active" type="number" placeholder="Node ID" value="">#}
+{#                        </div>#}
+{#                    </li>#}
+{#                </ul>#}
+{#            </div>#}
+{#        </div>#}
+{#    </div>#}
+{#</div>#}
+{#<!--container for visualization-->#}
+{#<div class="container">#}
+{#    <!-- visualization goes here -->#}
+{#    <div id="canvas"></div>#}
+{##}
+{#    <div class="col s12"></div>#}
+{#</div>#}
+{#</body>#}
+{#<script src="../../static/js/jquery-3.3.1.js"></script>#}
+{#<script src="../../static/js/materialize.min.js"></script>#}
+{#<script src='//cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.js'></script>#}
+{#<script src="../../static/js/homePage.js"></script>#}
+{##}
+{#<script>#}
+{#    $(document).ready(function () {#}
+{#        $('.collapsible').collapsible();#}
+{#    });#}
+{#</script>#}
+{#</html>#}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,102 +125,149 @@
     <meta http-equiv="expires" content="-1">
     <meta http-equiv="expires" content="Tue, 01 Jan 1980 11:00:00 GMT">
     <meta http-equiv="pragma" content="no-cache">
-
-    <title>Title</title>
-    <link rel='stylesheet' href='//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css'>
+    <title>Home Page</title>
     <style class="cp-pen-styles">
 
         #canvas {
-            width: 1200px;
-            height: 800px;
-            border: 1px solid #fff;
-            margin: 10px 0;
-            background-color: #bbc3ce;
+            width: 98%;
+            height: 600px;
             padding: 10px;
-            overflow: hidden;
+            background-color: #bbc3ce;
+            margin: 0 auto;
+            margin-top: 15px
         }
 
         .to {
             background-color: #26a69a;
         }
 
-
+        * {
+            border: 0;
+            margin: 0;
+        }
     </style>
 </head>
-<!--<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">-->
-
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 <link href="../../static/css/materialize.css" rel="stylesheet">
 <link href="../../static/css/homePageSideNav.css" rel="stylesheet">
 <body>
 <!--sidenav start here-->
-<div class="sideNav hoverable">
-    <div class="container">
-        <div class="row">
-            <div class="col s12">
-                <!--title for user-->
-                <h6 id="userStatus" class="valign-wrapper"></h6>
-                <!--logout button-->
-                <button id="logout" class="waves-effect waves-light btn">Logout</button>
-            </div>
+<nav style="position: relative" class="z-depth-5">
+    <div class="nav-wrapper #424242 grey darken-3">
+        <a href="#" class="brand-logo center">topology network</a>
+    </div>
+</nav>
+
+<div class="sideNav " style=" overflow-y:auto;">
+    <div>
+        <div>
+            <i class="material-icons" style="font-size: 60px;margin: 25px 0 0 25px;">account_circle</i>
         </div>
-        <!--function interface start here-->
-        <div class="row">
-            <div class="col pull-s1 s12" id="admin">
-                <ul class="collapsible">
-                    <li>
-                        <!--add function start here-->
-                        <div class="collapsible-header"><i class="material-icons">Add</i></div>
-                        <div class="collapsible-body">
-                            <!--add node button-->
-                            <button id="btn_node" class="waves-effect waves-light btn" style="margin-left: -19% ">Node
-                            </button>
-                        </div>
-                    </li>
-                    <li>
-                        <!--delete function start here-->
-                        <div class="collapsible-header"><i class="material-icons">Delete</i></div>
-                        <div class="collapsible-body">
-                            <button class="btn btn-primary" id="btn_delete">Delete Node</button>
-                            <input id="delete" type="number" placeholder="Node ID" value="">
-                        </div>
-                    </li>
-                    <li>
-                        <!--update function start here-->
-                        <div class="collapsible-header"><i class="material-icons">Move</i></div>
-                        <div class="collapsible-body">
-                            <button class="btn btn-primary" id="btn_link">Move Connector From</button>
-                            <input id="source" type="number" placeholder="Source Node" value="">
-                            <span class="label to">To</span>
-                            <input id="target" type="number" placeholder="Target Node" value="">
-                        </div>
-                    </li>
-                    <li>
-                        <!--update function start here-->
-                        <div class="collapsible-header"><i class="material-icons">Pattern</i></div>
-                        <div class="collapsible-body">
-                            <input id="pattern" type="number" placeholder="Pattern" value="1">
-                        </div>
-                    </li>
-                    <li>
-                        <!--delete function start here-->
-                        <div class="collapsible-header"><i class="material-icons">Activate</i></div>
-                        <div class="collapsible-body">
-                            <button class="btn btn-primary" id="btn_node_active">Activate</button>
-                            <input id="active" type="number" placeholder="Node ID" value="">
-                        </div>
-                    </li>
-                </ul>
-            </div>
+        <div style="margin-top: -20px;">
+            <h5 id="userStatus"></h5>
+            <a id="logout" class="waves-effect waves-light btn" style="margin-left: 30px">Logout</a>
+        </div>
+        <div class="divider z-depth-5" style="margin-top: 15px"></div>
+        <div class="z-depth-5" id="admin">
+            <a style="margin-left: 33px;font-size: 25px;color: black">Add</a>
+            <ul style="margin-left: 33px;height: 415px;">
+
+                <li>Add Node to selected pattern:</li>
+                <li>
+                    <div class="input-field" style="width: 150px;margin:1px 0 0 1px;">
+                        <select id="add_pattern_dropdown"></select>
+                    </div>
+                    <a id="btn_node" class="waves-effect waves-light btn-small" style="margin: 6px 0 0 30px;">Add Node</a>
+                    <div class="divider z-depth-5" style="margin-top: 15px"></div>
+
+                </li>
+
+                <li>Add Link</li>
+                <li>
+                    <div class="input-field" style="width: 150px;margin:1px 0 0 1px;">
+                        <select id="add_source">
+                            <option value="" disabled selected>Source Node</option>
+                        </select>
+                    </div>
+                </li>
+                <li>
+                    <div class="input-field" style="width: 150px;margin:1px 0 0 1px;">
+                        <select id="add_target">
+                            <option value="" disabled selected>Taget Node</option>
+                        </select>
+                    </div>
+                    <a id="btn_link" class="waves-effect waves-light btn-small" style="margin: 6px 0 0 30px;">Add Link</a>
+                    <div class="divider z-depth-5" style="margin-top: 15px"></div>
+                </li>
+            </ul>
+
+            {#           delete function menu start here #}
+            <a id="addTrigger" style="margin-left: 33px;font-size: 25px;color: black">Delete</a>
+            <ul id="addUl" style="margin-left: 33px;height: 275px;">
+                <li>
+                    <ul>
+                        <li>Node</li>
+                        <li>
+                            <div class="input-field" style="width: 150px;margin:1px 0 0 1px;">
+                                <select id="delete_node">
+                                    <option value="" disabled selected>Exsiting Node</option>
+                                </select>
+                            </div>
+                        </li>
+                        <li>
+                            <a id="btn_delete" class="waves-effect waves-light btn-small" style="margin: 6px 0 0 30px;">Delete</a>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <div class="divider z-depth-5" style="margin-top: 15px"></div>
+                </li>
+                <li>
+                    <ul style="margin-top: 10px">
+                        <li>
+                            Link Between Nodes
+                        </li>
+                        <li>
+                            <div class="input-field" style="width: 150px;margin:1px 0 0 1px;">
+                                <select id="delete_link">
+                                    <option value="" disabled selected>Exsiting Link</option>
+                                </select>
+                            </div>
+                        </li>
+                        <li>
+                            <a class="waves-effect waves-light btn-small" style="margin: 6px 0 0 30px;">Delete</a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+
+        {#        Activate Node Section #}
+        <div class="divider z-depth-5" style="margin-top: 15px"></div>
+        <div class="z-depth-5">
+            <a style="margin-left: 33px;font-size: 25px;color: black">Activate</a>
+            <ul style="margin-left: 33px;height: 415px;">
+                <li>Activate Node</li>
+                <li>
+                    <div class="input-field" style="width: 150px;margin:1px 0 0 1px;">
+                        <select id="activate_dropdown">
+                            <option value="" disabled selected>Select Node</option>
+                        </select>
+                    </div>
+                    <a id="btn_node_active" class="waves-effect waves-light btn-small" style="margin: 6px 0 0 30px;">Activate</a>
+                    <div class="divider z-depth-5" style="margin-top: 15px"></div>
+
+                </li>
+            </ul>
         </div>
     </div>
 </div>
 <!--container for visualization-->
-<div class="container">
+<div class="container" style="float: right">
     <!-- visualization goes here -->
     <div id="canvas"></div>
-
-    <div class="col s12"></div>
 </div>
+
 </body>
 <script src="../../static/js/jquery-3.3.1.js"></script>
 <script src="../../static/js/materialize.min.js"></script>
@@ -112,6 +277,8 @@
 <script>
     $(document).ready(function () {
         $('.collapsible').collapsible();
+        $('.dropdown-trigger').dropdown();
+        $('select').formSelect();
     });
 </script>
 </html>
