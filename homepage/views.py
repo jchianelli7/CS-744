@@ -114,7 +114,7 @@ def deleteNode(request):
             nodeList = request['link']
             for i in nodeList:
                 try:
-                    node = Node.objects.filter(number=i['source']['number'])[0]
+                    node = Node.objects.filter(id=i['source']['id'])[0]
                     node.delete()
                 except IndexError:
                     response = HttpResponse(json.dumps({'message': 'the node for deleting is not exists.'}))

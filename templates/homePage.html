@@ -177,7 +177,8 @@
                     <div class="input-field" style="width: 150px;margin:1px 0 0 1px;">
                         <select id="add_pattern_dropdown"></select>
                     </div>
-                    <a id="btn_node" class="waves-effect waves-light btn-small" style="margin: 6px 0 0 30px;">Add Node</a>
+                    <a id="btn_node" class="waves-effect waves-light btn-small" style="margin: 6px 0 0 30px;">Add
+                        Node</a>
                     <div class="divider z-depth-5" style="margin-top: 15px"></div>
 
                 </li>
@@ -193,10 +194,11 @@
                 <li>
                     <div class="input-field" style="width: 150px;margin:1px 0 0 1px;">
                         <select id="add_target">
-                            <option value="" disabled selected>Taget Node</option>
+                            <option value="" disabled selected>Target Node</option>
                         </select>
                     </div>
-                    <a id="btn_link" class="waves-effect waves-light btn-small" style="margin: 6px 0 0 30px;">Add Link</a>
+                    <a id="btn_link" class="waves-effect waves-light btn-small" style="margin: 6px 0 0 30px;">Add
+                        Link</a>
                     <div class="divider z-depth-5" style="margin-top: 15px"></div>
                 </li>
             </ul>
@@ -204,13 +206,20 @@
             {#           delete function menu start here #}
             <a id="addTrigger" style="margin-left: 33px;font-size: 25px;color: black">Delete</a>
             <ul id="addUl" style="margin-left: 33px;height: 275px;">
+                <li>Select pattern of node to be deleted</li>
+                <li>
+                    <div class="input-field" style="width: 150px;margin:1px 0 0 1px;">
+                        <select id="delete_pattern_dropdown"></select>
+                    </div>
+                    <div class="divider z-depth-5" style="margin-top: 15px"></div>
+                </li>
                 <li>
                     <ul>
-                        <li>Node</li>
+                        <li>Node to be deleted</li>
                         <li>
                             <div class="input-field" style="width: 150px;margin:1px 0 0 1px;">
                                 <select id="delete_node">
-                                    <option value="" disabled selected>Exsiting Node</option>
+                                    <option value="" disabled selected>Node ID</option>
                                 </select>
                             </div>
                         </li>
@@ -219,26 +228,27 @@
                         </li>
                     </ul>
                 </li>
-                <li>
-                    <div class="divider z-depth-5" style="margin-top: 15px"></div>
-                </li>
-                <li>
-                    <ul style="margin-top: 10px">
-                        <li>
-                            Link Between Nodes
-                        </li>
-                        <li>
-                            <div class="input-field" style="width: 150px;margin:1px 0 0 1px;">
-                                <select id="delete_link">
-                                    <option value="" disabled selected>Exsiting Link</option>
-                                </select>
-                            </div>
-                        </li>
-                        <li>
-                            <a class="waves-effect waves-light btn-small" style="margin: 6px 0 0 30px;">Delete</a>
-                        </li>
-                    </ul>
-                </li>
+
+                {#                <li>#}
+                {#                    <div class="divider z-depth-5" style="margin-top: 15px"></div>#}
+                {#                </li>#}
+                {#                <li>#}
+                {#                    <ul style="margin-top: 10px">#}
+                {#                        <li>#}
+                {#                            Link Between Nodes#}
+                {#                        </li>#}
+                {#                        <li>#}
+                {#                            <div class="input-field" style="width: 150px;margin:1px 0 0 1px;">#}
+                {#                                <select id="delete_link">#}
+                {#                                    <option value="" disabled selected>Exsiting Link</option>#}
+                {#                                </select>#}
+                {#                            </div>#}
+                {#                        </li>#}
+                {#                        <li>#}
+                {#                            <a class="waves-effect waves-light btn-small" style="margin: 6px 0 0 30px;">Delete</a>#}
+                {#                        </li>#}
+                {#                    </ul>#}
+                {#                </li>#}
             </ul>
         </div>
 

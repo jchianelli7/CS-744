@@ -24,7 +24,6 @@ this.getNodes()
 
 setInterval(this.randomInactiveNodes, 10000); // Randomly activates node
 
-
 $('#logout').on('click', function () {
     window.location.href = '/homepage/logout/'
 })
@@ -75,15 +74,16 @@ document.querySelector('#btn_link').addEventListener('click', e => {
     var target = f.options[f.selectedIndex].value;
     this.createLink(source, target)
 });
-//
-// document.querySelector('#btn_delete').addEventListener('click', e => {
-//     var pattern = document.getElementById("pattern").value;
-//     var id = document.getElementById("delete").value;
-//     this.deleteNode(pattern, id);
-// });
+
+document.querySelector('#btn_delete').addEventListener('click', e => {
+    var e = document.getElementById("delete_pattern_dropdown");
+    var pattern = e.options[e.selectedIndex].value;
+    var f = document.getElementById("delete_node");
+    var id = f.options[f.selectedIndex].value;
+    this.deleteNode(pattern, id);
+});
 
 document.querySelector('#btn_node_active').addEventListener('click', e => {
-    console.log('click')
     var e = document.getElementById("activate_dropdown");
     var id = e.options[e.selectedIndex].value;
     this.activateNode(id);
@@ -160,8 +160,6 @@ function addNode(type, pattern) {
             console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
         }
     });
-
-
 }
 
 function addLink(s, l) {
@@ -370,20 +368,6 @@ function _verifyNewLink(source, target) {
         !this._findLink(source, target));
 }
 
-function removeLinks(_id) {
-    let id = _id
-    let links = this.forceLayout.links();
-    let i = 0;
-    while (i < links.length) {
-        if ((links[i].source.id == id) || (links[i].target.id == id)) {
-            links.splice(i, 1);
-        }
-        else
-            i++;
-    }
-    this._redraw();
-}
-
 function removeLinkBetween(id1, id2) {
     let links = this.forceLayout.links();
     let i = 0;
@@ -413,10 +397,24 @@ function _getConnectorLinks(id) {
 }
 
 function deleteNode(pattern, _id) {
+    // Remove Node
     let id = _id;
-    if (patterns[pattern].nodes.length == 1) return;
     let nodes = this.forceLayout.nodes();
     let links = this.forceLayout.links();
+
+    var found = false;
+    for (var j = 0; j < patterns[pattern].nodes.length; j++) {
+        if (patterns[pattern].nodes[j].id == id) {
+            found = true;
+            break;
+        }
+    }
+
+    if (!found) {
+        $(this).trigger(M.toast({html: 'Error: Node is not in selected pattern'}));
+        return
+    }
+
     let i = 0;
     while (i < nodes.length) {
         if (nodes[i].id == id) {
@@ -426,7 +424,44 @@ function deleteNode(pattern, _id) {
         else
             i++;
     }
-    this.removeLinks(id);
+    // Remove Link
+    i = 0;
+    while (i < links.length) {
+        if ((links[i].source.id == id) || (links[i].target.id == id)) {
+            links.splice(i, 1);
+        }
+        else
+            i++;
+    }
+
+    let data = {
+        'link': []
+    }
+    console.log(this.forceLayout.links())
+    // data.link = this.forceLayout.links()
+    data.link.push({
+        'source': {'id': id}
+    })
+    $.ajax({
+        url: "/homepage/deleteNode/", // the endpoint
+        type: "POST", // http method
+        data: JSON.stringify(data),
+
+        // handle a successful response
+        success: function (response) {
+            // console.log(JSON.parse(response)) // log the returned json to the console
+            console.log("success"); // another sanity check
+            _redraw()
+
+        },
+
+        // handle a non-successful response
+        error: function (xhr, errmsg, err) {
+            $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: " + errmsg +
+                " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+            console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+        }
+    });
 
 }
 
@@ -544,7 +579,7 @@ function find(f) {
 }
 
 function updateDropDown(nodes, link) {
-    // Add Pattern
+    // Add Node
     let numPatterns = 0
     var select = document.getElementById("add_pattern_dropdown");
     $('#add_pattern_dropdown').empty()
@@ -562,6 +597,27 @@ function updateDropDown(nodes, link) {
     option.text = 'New Pattern'
     option.value = numPatterns + 1;
     select.add(option, 0);
+
+    //Delete Node
+    var select = document.getElementById("delete_pattern_dropdown");
+    $('#delete_pattern_dropdown').empty()
+    nodes.forEach(function (name, value) {
+        if (name.type == 1) {
+            var option = document.createElement('option');
+            option.text = name.pattern;
+            option.value = convertPatternToInt(name.pattern)
+            select.add(option, 0);
+        }
+    })
+
+    var select = document.getElementById("delete_node");
+    $('#delete_node').empty()
+    nodes.forEach(function (name, value) {
+        var option = document.createElement('option');
+        option.text = name.number;
+        option.value = name.id
+        select.add(option, 0);
+    })
 
     // Activate node
     var select = document.getElementById("activate_dropdown");
@@ -593,13 +649,8 @@ function updateDropDown(nodes, link) {
         option.value = name.id
         selectTarget.add(option, 0);
     })
-
     $('select').formSelect();
-
 }
-
-
-
 
 
 
