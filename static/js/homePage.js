@@ -53,6 +53,19 @@ this.forceLayout = d3.layout.force().size([1200, 800]).nodes([]).links([])
     .charge(-4000)
     .on("tick", this._tick.bind(this));
 
+var force = d3.layout.force(),
+    safety = 0;
+while (force.alpha() > 0.05) { // You'll want to try out different, "small" values for this
+    force.tick();
+    if (safety++ > 500) {
+        break;// Avoids infinite looping in case this solution was a bad idea
+    }
+}
+
+if (safety < 500) {
+    console.log('success??');
+}
+
 /* Globals End */
 
 /* Button Event Start */
@@ -467,6 +480,17 @@ function deleteNode(pattern, _id) {
 }
 
 function _tick() {
+
+    var safety = 0;
+    while (this.forceLayout.alpha() > 0.05) { // You'll want to try out different, "small" values for this
+        this.forceLayout.tick();
+        if (safety++ > 500) {
+            break;// Avoids infinite looping in case this solution was a bad idea
+        }
+    }
+    if (safety < 500) {
+        console.log('success??');
+    }
     this.vis.selectAll('.node').attr('transform', d => `translate(${d.x}, ${d.y})`);
 
     this.vis.selectAll(".link").attr("x1", d => d.source.x).attr("y1", d => d.source.y)
@@ -491,6 +515,12 @@ function draw(nodes, links) {
     this.forceLayout.nodes().length = 0
     this.forceLayout.links().length = 0
     nodes.forEach(function (e) {
+        e.x = 500
+        e.y = 500
+        e.px = 500
+        e.py = 500
+        console.log(e)
+
         this.forceLayout.nodes().push(e)
         let pattern = convertPatternToInt(e.pattern)
         patterns[pattern].nodes.push(e)
@@ -594,8 +624,6 @@ function updateDropDown(nodes, link) {
     let numPatterns = 0
     var select = document.getElementById("add_pattern_dropdown");
     $('#add_pattern_dropdown').empty()
-    console.log('updating')
-    console.log(nodes)
     nodes.forEach(function (name, value) {
         if (name.type == 1) {
             numPatterns++
