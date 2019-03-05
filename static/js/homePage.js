@@ -58,8 +58,9 @@ this.forceLayout = d3.layout.force().size([1200, 800]).nodes([]).links([])
 /* Button Event Start */
 document.querySelector('#btn_node').addEventListener('click', e => {
     var e = document.getElementById("add_pattern_dropdown");
+    console.log(e.options)
     var pattern = e.options[e.selectedIndex].value;
-    if (patterns[pattern].nodes.length === 0) {
+    if (patterns[pattern].nodes.length == 0) {
         // 0 is non-connector, 1 is connector
         this.addNode(1, pattern);
     } else {
@@ -93,7 +94,8 @@ document.querySelector('#btn_node_active').addEventListener('click', e => {
 /* Button Event End */
 
 function addNode(type, pattern) {
-    if (patterns[pattern].nodes.length === 7) $(this).trigger(M.toast({html: 'Error: Pattern cannot contain more than 7 nodes'})); //no more than 7 nodes
+    console.log(patterns)
+    if (patterns[pattern].nodes.length == 7) $(this).trigger(M.toast({html: 'Error: Pattern cannot contain more than 7 nodes'})); //no more than 7 nodes
     let id = this._nextID()
     let number = 'N' + ("0" + id).slice(-2);
 
@@ -195,7 +197,6 @@ function getNodes() {
                 updateDropDown([], [])
                 return
             }
-            console.log(JSON.parse(response))
             var json = JSON.parse(response)
             let nodelist = []
 
@@ -227,7 +228,6 @@ function getNodes() {
 }
 
 function activateNode(id) {
-    console.log(id)
     let data = {
         'node': []
     }
@@ -332,7 +332,6 @@ function createLink(s, t) {
         source, target
     });
     this._updateLinks()
-    console.log(this.forceLayout.links())
     let data = {
         'link': []
     }
@@ -415,29 +414,10 @@ function deleteNode(pattern, _id) {
         return
     }
 
-    let i = 0;
-    while (i < nodes.length) {
-        if (nodes[i].id == id) {
-            patterns[pattern].nodes.splice(i, 1);
-            nodes.splice(i, 1);
-        }
-        else
-            i++;
-    }
-    // Remove Link
-    i = 0;
-    while (i < links.length) {
-        if ((links[i].source.id == id) || (links[i].target.id == id)) {
-            links.splice(i, 1);
-        }
-        else
-            i++;
-    }
 
     let data = {
         'link': []
     }
-    console.log(this.forceLayout.links())
     // data.link = this.forceLayout.links()
     data.link.push({
         'source': {'id': id}
@@ -449,17 +429,38 @@ function deleteNode(pattern, _id) {
 
         // handle a successful response
         success: function (response) {
-            // console.log(JSON.parse(response)) // log the returned json to the console
             console.log("success"); // another sanity check
-            _redraw()
+            let json = JSON.parse(response)
+            console.log(json)
 
+            //_redraw()
+            // let i = 0;
+            // while (i < nodes.length) {
+            //     if (nodes[i].id == id) {
+            //         patterns[pattern].nodes.splice(i, 1);
+            //         nodes.splice(i, 1);
+            //     }
+            //     else
+            //         i++;
+            // }
+            // // Remove Link
+            // i = 0;
+            // while (i < links.length) {
+            //     if ((links[i].source.id == id) || (links[i].target.id == id)) {
+            //         links.splice(i, 1);
+            //     }
+            //     else
+            //         i++;
+            // }
+            draw(json.node, json.link)
         },
 
         // handle a non-successful response
         error: function (xhr, errmsg, err) {
-            $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: " + errmsg +
-                " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
-            console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+            // $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: " + errmsg +
+            //     " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+            // console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+            $(this).trigger(M.toast({html: xhr.responseJSON.message}))
         }
     });
 
@@ -480,6 +481,15 @@ function _redraw() {
 
 //Draws nodes and links from database on GET page load
 function draw(nodes, links) {
+    patterns = [];
+    for (var i = 0; i < 99; i++) { //max 99 patterns
+        var pattern = {};
+        pattern['nodes'] = [];
+        pattern['links'] = 0;
+        patterns.push(pattern);
+    }
+    this.forceLayout.nodes().length = 0
+    this.forceLayout.links().length = 0
     nodes.forEach(function (e) {
         this.forceLayout.nodes().push(e)
         let pattern = convertPatternToInt(e.pattern)
@@ -492,6 +502,7 @@ function draw(nodes, links) {
             source, target
         });
     });
+    updateDropDown(nodes, links)
     this._redraw()
 }
 
@@ -583,7 +594,8 @@ function updateDropDown(nodes, link) {
     let numPatterns = 0
     var select = document.getElementById("add_pattern_dropdown");
     $('#add_pattern_dropdown').empty()
-
+    console.log('updating')
+    console.log(nodes)
     nodes.forEach(function (name, value) {
         if (name.type == 1) {
             numPatterns++

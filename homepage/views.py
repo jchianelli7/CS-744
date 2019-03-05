@@ -111,16 +111,18 @@ def deleteNode(request):
             userStatus = request.COOKIES.get('is_superuser')
             user = request.COOKIES.get('username')
             request = simplejson.loads(request.body)
-            nodeList = request['link']
-            for i in nodeList:
+            node = request['link']
+
+            for i in node:
                 try:
                     node = Node.objects.filter(id=i['source']['id'])[0]
                     node.delete()
                 except IndexError:
-                    response = HttpResponse(json.dumps({'message': 'the node for deleting is not exists.'}))
-                except Node.nodeError as e:
-                    response = HttpResponse(json.dumps({'message': e}))
-
+                    # response = HttpResponse(json.dumps({'message': 'the node for deleting is not exists.'}))
+                    return bad_request(message='Error: Node not found')
+                except Node.nodeDeleteError as e:
+                    # response = HttpResponse(json.dumps({'message': e}))
+                    return bad_request(message='Error: Cant delete connector node with attached non-connectors')
         except simplejson.JSONDecodeError:
             pass
         else:
@@ -139,7 +141,7 @@ def deleteNode(request):
                                            'status': target.status, 'pattern': target.pattern}}
                         linkList.append(dict)
 
-                    resp = {'node': nodeList, 'link': linkList}
+            resp = {'node': nodeList, 'link': linkList}
             response = HttpResponse(json.dumps(resp))
             response.set_cookie('is_superuser', userStatus)
             response.set_cookie('username', user)
@@ -208,7 +210,7 @@ def activeNode(request):
 
         except IndexError:
             return bad_request(message='Error: Node does not exist')
-            #response = HttpResponse(json.dumps({'message': 'node did not exists'}))
+            # response = HttpResponse(json.dumps({'message': 'node did not exists'}))
         except simplejson.JSONDecodeError:
             response = HttpResponse()
         else:

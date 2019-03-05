@@ -52,7 +52,7 @@ class Node(models.Model):
         return
 
     def delete(self, using=None, keep_parents=False):
-        if(self.type==1 and self.link.filter(type==0).count()>0):
+        if(self.type==1 and self.link.count() > 0):
             raise Node.nodeDeleteError('you can not delete the connector when pattern have other normal node')
         else:
             for x in self.link.all():
