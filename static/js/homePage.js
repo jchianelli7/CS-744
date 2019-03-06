@@ -5,10 +5,10 @@
     for (let i in cookieArr) {
         let key = cookieArr[i].split("=")[0];
         key = key.trim();
-        if (key === "is_superuser") {
+        if (key == "is_superuser") {
             let isAdmin = cookieArr[i].split("=")[1].trim();
             var x = document.getElementById("admin");
-            if (isAdmin === 'True') {
+            if (isAdmin == 'True') {
                 $("#userStatus").text('Admin').css('margin-left', 15 + '%')
                 x.style.display = "block";
             } else {
@@ -22,7 +22,7 @@
 
 this.getNodes()
 
-setInterval(this.randomInactiveNodes, 10000); // Randomly activates node
+setInterval(this.randomInactiveNodes, 15000); // Randomly activates node
 
 $('#logout').on('click', function () {
     window.location.href = '/homepage/logout/'
@@ -63,7 +63,7 @@ while (force.alpha() > 0.05) { // You'll want to try out different, "small" valu
 }
 
 if (safety < 500) {
-    console.log('success??');
+    // Do nothing
 }
 
 /* Globals End */
@@ -94,7 +94,7 @@ document.querySelector('#btn_delete').addEventListener('click', e => {
     var pattern = e.options[e.selectedIndex].value;
     var f = document.getElementById("delete_node");
     var id = f.options[f.selectedIndex].value;
-    this.deleteNode(pattern, id);
+    this.prepareDelete(pattern, id);
 });
 
 document.querySelector('#btn_node_active').addEventListener('click', e => {
@@ -107,7 +107,6 @@ document.querySelector('#btn_node_active').addEventListener('click', e => {
 /* Button Event End */
 
 function addNode(type, pattern) {
-    console.log(patterns)
     if (patterns[pattern].nodes.length == 7) $(this).trigger(M.toast({html: 'Error: Pattern cannot contain more than 7 nodes'})); //no more than 7 nodes
     let id = this._nextID()
     let number = 'N' + ("0" + id).slice(-2);
@@ -136,6 +135,7 @@ function addNode(type, pattern) {
         this.addLink(nodes[0].id, nodes[size - 1].id); // connector index, index of last addition
         this.addLink(nodes[size - 1].id, nodes[size - 2].id);
     } else {
+        //TODO: add node to node with only two neightbors
         //remove links between last node added, and first nonconnector node
         this.removeLinkBetween(nodes[size - 2].id, nodes[1].id);
         //close loop with new node and first non nonconnector connector
@@ -143,11 +143,13 @@ function addNode(type, pattern) {
         this.addLink(nodes[size - 1].id, nodes[size - 2].id);
     }
 
+    //remove any one link, add inbetween
+
     let data = {
         'link': []
     }
     data.link = this.forceLayout.links()
-    if (patterns[pattern].nodes.length === 1) {
+    if (patterns[pattern].nodes.length == 1) {
         // TODO: This could be a problem, but you cant just create one
         // Adding a new connector node
         // data.link.push({
@@ -165,7 +167,6 @@ function addNode(type, pattern) {
             // console.log(JSON.parse(response)) // log the returned json to the console
             console.log("success"); // another sanity check
             _redraw()
-
         },
 
         // handle a non-successful response
@@ -321,7 +322,7 @@ function updateStatus(newNodes) {
             .attr('dx', -6)
             .attr('dy', 4)
         node.append('text')
-            .text(node => node.type === 1 ? "" + node.pattern : '')
+            .text(node => node.type == 1 ? "" + node.pattern : '')
             .attr('font-size', 8)
             .attr('fill', 'black')
             .attr('dx', 25)
@@ -382,11 +383,15 @@ function _verifyNewLink(source, target) {
 
 function removeLinkBetween(id1, id2) {
     let links = this.forceLayout.links();
+    console.log('removing links between' + id1 + ' and ' + id2)
     let i = 0;
     while (i < links.length) {
-        if ((links[i].source.id === id1 && links[i].target.id === id2) ||
-            (links[i].source.id === id2 && links[i].target.id === id1))
+        if ((links[i].source.id == id1 && links[i].target.id == id2) ||
+            (links[i].source.id == id2 && links[i].target.id == id1)) {
             this.forceLayout.links().splice(i, 1);
+
+        }
+
         else
             i++;
     }
@@ -397,15 +402,197 @@ function removeLinkBetween(id1, id2) {
     }
 }
 
+// Use only in delete!!!
+function moveConnectorTo(pattern, s, t) {
+    console.log('moving connector from ' + s + ' to ' + t)
+
+    let nodes = this.forceLayout.nodes();
+    let links = this.forceLayout.links();
+
+    let source = -1, target = -1;
+    let connectorID = patterns[pattern].nodes[0].id
+    if (!this._findLink(connectorID, s)) {
+        console.log('source is not linked with connector');
+        return
+    }
+
+    //Remove old link from connector to source
+    // this.removeLinkBetween(s, connectorID);
+    console.log('removing links between' + s + ' and ' + connectorID)
+    let i = 0;
+    while (i < links.length) {
+        if ((links[i].source.id == s && links[i].target.id == connectorID) ||
+            (links[i].source.id == connectorID && links[i].target.id == s)) {
+            this.forceLayout.links().splice(i, 1);
+        }
+        else
+            i++;
+    }
+
+    // If pattern node size is 5, need to also remove link from new id and node to be deleted
+    // console.log('removing links between' + s + ' and ' + t)
+    // i = 0;
+    // while (i < links.length) {
+    //     if ((links[i].source.id == s && links[i].target.id == t) ||
+    //         (links[i].source.id == t && links[i].target.id == s)) {
+    //         this.forceLayout.links().splice(i, 1);
+    //     }
+    //     else
+    //         i++;
+    // }
+
+    //Check and add new link
+    if (this._verifyNewLink(t, connectorID)) {
+        // source = patterns[pattern].nodes[0].id;
+        // target = nodes[t].id;
+        source = find(connectorID)
+        target = find(t)
+    } else {
+        console.error('unable to create link');
+        return
+    }
+
+    this.forceLayout.links().push({
+        source, target
+    });
+
+    // this._updateLinks()
+    const layout_links = this.forceLayout.links()
+    const linksUpdated = this.vis.select('.linkContainer').selectAll(".link").data(layout_links);
+    linksUpdated.enter().insert('line').attr('class', 'link').style('stroke', 'white').style('stroke-width', 5)
+        .attr('x1', d => d.source.x).attr('y1', d => d.source.y).attr('x2', d => d.target.x).attr('y2', d => d.target.y);
+    linksUpdated.exit().remove();
+    this.forceLayout.start();
+
+    console.log(this.forceLayout.links())
+    // update database with new links
+    let data = {
+        'link': []
+    }
+    data.link = this.forceLayout.links()
+    console.log(data)
+    $.ajax({
+        url: "/homepage/addNode/", // the endpoint
+        type: "POST", // http method
+        data: JSON.stringify(data),
+
+        // handle a successful response
+        success: function (response) {
+            // console.log(JSON.parse(response)) // log the returned json to the console
+            console.log("success"); // another sanity check
+            deleteNode(pattern, s)
+        },
+
+        // handle a non-successful response
+        error: function (xhr, errmsg, err) {
+            $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: " + errmsg +
+                " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+            console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+        }
+    });
+}
+
 function _getConnectorLinks(id) {
     let i = 0, count = 0;
     while (i < links.length) {
-        if (links[i].source.id === id || links[i].target.id === id)
+        if (links[i].source.id == id || links[i].target.id == id)
             count++;
         else
             i++;
     }
     return count;
+}
+
+function prepareDelete(pattern, _id) {
+    // Remove Node
+    let id = _id;
+    let nodes = this.forceLayout.nodes();
+    let links = this.forceLayout.links();
+
+    // Make sure node exists in pattern
+    var found = false;
+    for (var j = 0; j < patterns[pattern].nodes.length; j++) {
+        if (patterns[pattern].nodes[j].id == id) {
+            found = true;
+            break;
+        }
+    }
+    if (!found) {
+        $(this).trigger(M.toast({html: 'Error: Node is not in selected pattern'}));
+        return
+    }
+
+    var linkCount = [];
+    links.forEach(function (e) {
+        if (e.source.id == id && !linkCount.includes(e.target.id)) {
+            linkCount.push(e.target.id)
+        } else if (e.target.id == id && !linkCount.includes(e.source.id)) {
+            linkCount.push(e.source.id)
+        }
+    })
+    console.log(linkCount)
+
+
+    if (linkCount.length < 3) {
+        // Regular delete
+        this.deleteNode(pattern, id)
+        console.log('regular delete')
+        return
+    }
+
+    // only 4 nodes left
+    if (patterns[pattern].nodes.length == 4) {
+        // Regular delete
+        this.deleteNode(pattern, id)
+        console.log('regular delete')
+        return
+    }
+
+    //else node has 3 links and needs to move one
+    console.log('need to move')
+    console.log(links)
+    var linkedToConnectorIds = []
+    var unlinkedToConnector = []
+    // Check which node is being deleted
+    links.forEach(function (e) {
+        if ((e.source.id == id && e.target.type == 1) || (e.source.type == 1 && e.target.id == id)) {
+            // if node to be deleted is linked with the connector
+            // get all nodes in pattern linked to connector
+            console.log(e)
+            links.forEach(function (e) {
+                if (e.source.pattern == convertPatternToString(pattern) && e.target.pattern == convertPatternToString(pattern)) {
+                    // Dealing with links only in pattern
+                    console.log('pattern check')
+                    if (e.target.type == 1) {
+                        linkedToConnectorIds.push(e.source)
+                    } else if (e.source.type == 1) {
+                        linkedToConnectorIds.push(e.target)
+                    }
+                }
+            })
+
+            // then get all nodes NOT linked to the connector
+            patterns[pattern].nodes.forEach(function (e) {
+                unlinkedToConnector.push(e)
+            })
+            linkedToConnectorIds.forEach(function (linked) {
+                var i = 0;
+                while (i < unlinkedToConnector.length) {
+                    if (unlinkedToConnector[i].id == linked.id || unlinkedToConnector[i].type == 1) {
+                        unlinkedToConnector.splice(i, 1);
+                    }
+                    else
+                        i++;
+                }
+            })
+        }
+    });
+    // then pick a random node NOT linked to connector, and move link
+    // from node 2b deleted to new unlinked node
+    console.log(linkedToConnectorIds)
+    console.log(unlinkedToConnector)
+    var newId = unlinkedToConnector[Math.floor(Math.random() * unlinkedToConnector.length)].id
+    this.moveConnectorTo(pattern, id, newId)
 }
 
 function deleteNode(pattern, _id) {
@@ -414,6 +601,7 @@ function deleteNode(pattern, _id) {
     let nodes = this.forceLayout.nodes();
     let links = this.forceLayout.links();
 
+    // Make sure node exists in pattern
     var found = false;
     for (var j = 0; j < patterns[pattern].nodes.length; j++) {
         if (patterns[pattern].nodes[j].id == id) {
@@ -421,17 +609,15 @@ function deleteNode(pattern, _id) {
             break;
         }
     }
-
     if (!found) {
         $(this).trigger(M.toast({html: 'Error: Node is not in selected pattern'}));
         return
     }
 
-
     let data = {
         'link': []
     }
-    // data.link = this.forceLayout.links()
+
     data.link.push({
         'source': {'id': id}
     })
@@ -447,24 +633,16 @@ function deleteNode(pattern, _id) {
             console.log(json)
 
             //_redraw()
-            // let i = 0;
-            // while (i < nodes.length) {
-            //     if (nodes[i].id == id) {
-            //         patterns[pattern].nodes.splice(i, 1);
-            //         nodes.splice(i, 1);
-            //     }
-            //     else
-            //         i++;
-            // }
-            // // Remove Link
-            // i = 0;
-            // while (i < links.length) {
-            //     if ((links[i].source.id == id) || (links[i].target.id == id)) {
-            //         links.splice(i, 1);
-            //     }
-            //     else
-            //         i++;
-            // }
+            let i = 0;
+            while (i < nodes.length) {
+                if (nodes[i].id == id) {
+                    patterns[pattern].nodes.splice(i, 1);
+                    nodes.splice(i, 1);
+                }
+                else
+                    i++;
+            }
+
             draw(json.node, json.link)
         },
 
@@ -476,11 +654,9 @@ function deleteNode(pattern, _id) {
             $(this).trigger(M.toast({html: xhr.responseJSON.message}))
         }
     });
-
 }
 
 function _tick() {
-
     var safety = 0;
     while (this.forceLayout.alpha() > 0.05) { // You'll want to try out different, "small" values for this
         this.forceLayout.tick();
@@ -489,7 +665,7 @@ function _tick() {
         }
     }
     if (safety < 500) {
-        console.log('success??');
+        // Do nothing
     }
     this.vis.selectAll('.node').attr('transform', d => `translate(${d.x}, ${d.y})`);
 
@@ -515,12 +691,6 @@ function draw(nodes, links) {
     this.forceLayout.nodes().length = 0
     this.forceLayout.links().length = 0
     nodes.forEach(function (e) {
-        e.x = 500
-        e.y = 500
-        e.px = 500
-        e.py = 500
-        console.log(e)
-
         this.forceLayout.nodes().push(e)
         let pattern = convertPatternToInt(e.pattern)
         patterns[pattern].nodes.push(e)
@@ -557,7 +727,7 @@ function _updateNodes() {
                 .attr('dx', -6)
                 .attr('dy', 4)
             node.append('text')
-                .text(node => node.type === 1 ? "" + node.pattern : '')
+                .text(node => node.type == 1 ? "" + node.pattern : '')
                 .attr('font-size', 8)
                 .attr('fill', 'black')
                 .attr('dx', 25)
