@@ -71,7 +71,6 @@ if (safety < 500) {
 /* Button Event Start */
 document.querySelector('#btn_node').addEventListener('click', e => {
     var e = document.getElementById("add_pattern_dropdown");
-    console.log(e.options)
     var pattern = e.options[e.selectedIndex].value;
     if (patterns[pattern].nodes.length == 0) {
         // 0 is non-connector, 1 is connector
@@ -125,25 +124,79 @@ function addNode(type, pattern) {
     this.forceLayout.nodes().push(node);
 
     let nodes = patterns[pattern].nodes; //Nodes in current pattern
+    let links = this.forceLayout.links()
     let size = nodes.length; //Length of current pattern nodes
+
     if (nodes.length >= 1 && nodes.length < 3) {
         //link with connector
         this.addLink(nodes[0].id, nodes[size - 1].id); // connector index, index of last addition
         patterns[pattern].links++;
     } else if (size <= 4) {
+        // Adding nodes 3,4
         //close loop with connector
         this.addLink(nodes[0].id, nodes[size - 1].id); // connector index, index of last addition
         this.addLink(nodes[size - 1].id, nodes[size - 2].id);
-    } else {
-        //TODO: add node to node with only two neightbors
-        //remove links between last node added, and first nonconnector node
-        this.removeLinkBetween(nodes[size - 2].id, nodes[1].id);
-        //close loop with new node and first non nonconnector connector
-        this.addLink(nodes[size - 1].id, nodes[1].id);
-        this.addLink(nodes[size - 1].id, nodes[size - 2].id);
-    }
+    } else if (size == 5) {
+        // Need to do because of the way delete works
+        // Connect with nodes with only 2 links
+        var nodesWith2Links = []
+        nodes.forEach(function (node) {
+            var linkCount = [];
+            links.forEach(function (e) {
+                if (e.source.id == node.id && !linkCount.includes(e.target.id)) {
+                    linkCount.push(e.target.id)
+                } else if (e.target.id == node.id && !linkCount.includes(e.source.id)) {
+                    linkCount.push(e.source.id)
+                }
 
-    //remove any one link, add inbetween
+            })
+            if (linkCount.length == 2) nodesWith2Links.push(node)
+        })
+        console.log(nodesWith2Links)
+        if (nodesWith2Links.length != 2) {
+            //remove links between last node added, and first nonconnector node
+            // will always work because prior, everything connected to everything
+            this.removeLinkBetween(nodes[size - 2].id, nodes[1].id);
+            //close loop with new node and first non nonconnector connector
+            this.addLink(nodes[size - 1].id, nodes[1].id);
+            this.addLink(nodes[size - 1].id, nodes[size - 2].id);
+        } else {
+            //close loop with new node and first non nonconnector connector
+            this.addLink(nodes[size - 1].id, nodesWith2Links[0].id);
+            this.addLink(nodes[size - 1].id, nodesWith2Links[1].id);
+        }
+    } else {
+        var nodesWith2Links = []
+        nodes.forEach(function (node) {
+            var linkCount = [];
+            links.forEach(function (e) {
+                if (e.source.id == node.id && !linkCount.includes(e.target.id)) {
+                    linkCount.push(e.target.id)
+                } else if (e.target.id == node.id && !linkCount.includes(e.source.id)) {
+                    linkCount.push(e.source.id)
+                }
+
+            })
+            if (linkCount.length == 2) nodesWith2Links.push(node)
+        })
+        console.log(nodesWith2Links)
+
+        //get neighbor of node w 2 links
+        var neighbor = []
+        links.forEach(function (e) {
+            if (e.source.id == nodesWith2Links[0].id && !neighbor.includes(e.target.id)) {
+                neighbor.push(e.target.id)
+            } else if (e.target.id == nodesWith2Links[0].id && !neighbor.includes(e.source.id)) {
+                neighbor.push(e.source.id)
+            }
+        })
+        console.log(neighbor)
+
+        this.removeLinkBetween(nodesWith2Links[0].id, neighbor[0]);
+        //close loop with new node and first non nonconnector connector
+        this.addLink(nodes[size - 1].id, nodesWith2Links[0].id);
+        this.addLink(nodes[size - 1].id, neighbor[0]);
+    }
 
     let data = {
         'link': []
@@ -514,6 +567,12 @@ function prepareDelete(pattern, _id) {
     for (var j = 0; j < patterns[pattern].nodes.length; j++) {
         if (patterns[pattern].nodes[j].id == id) {
             found = true;
+            if (patterns[pattern].nodes[j].type == 1) {
+                // Skip ahead and either delete it or error
+                this.deleteNode(pattern, id)
+                console.log('regular delete')
+                return
+            }
             break;
         }
     }
@@ -530,8 +589,6 @@ function prepareDelete(pattern, _id) {
             linkCount.push(e.source.id)
         }
     })
-    console.log(linkCount)
-
 
     if (linkCount.length < 3) {
         // Regular delete
