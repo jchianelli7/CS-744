@@ -166,9 +166,10 @@ def inactiveNode(request):
             #     i.save()
 
             nonconnectors = [x for x in Node.objects.all() if (x.type == 0 and x.status == True)]
-            node = random.choice(nonconnectors)
-            node.status = False
-            node.save()
+            if(len(nonconnectors) >= 1):
+                node = random.choice(nonconnectors)
+                node.status = False
+                node.save()
 
             nodeList = []
             for i in Node.objects.all():
