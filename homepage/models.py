@@ -40,29 +40,38 @@ class Node(models.Model):
         elif(Node.objects.filter(id=self.id).exists()==False):
             raise Node.nodeNotExistError('the source node did not exist')
 
-        elif(self.link.filter(type=0).count()==3 or node.link.filter(type=0).count()==3):
-            raise Node.nodeLinkError('the node has three links')
+        elif(self.link.filter(type=0).count()==2 or node.link.filter(type=0).count()==2):
+            raise Node.nodeLinkError('the node has two links')
 
         elif(self.type==1 and self.link.count()==0 and node.type==0 and Node.objects.filter(id!=self.id,type=1).exists()):
             node=Node.objects.filter(id!=self.id,type=1)[0]
-            print(node.number)
             raise Node.nodeInitialError('the inital connector of new pattren should linked with connector instead of normal node')
         else:
             self.link.add(node)
             node.link.add(self)
         return
 
-    def deleteLink(self,node):
-        if(isinstance(node,Node)==False):
-            raise Node.nodeError('the type of argu for deletLink should be Node instead of '+type(node)+'.')
-        if(Path.objects.filter(startNodeId=self,endNodeId=node).exists()==False):
-            raise Node.nodeError('the link did not exists')
-        elif(self.type==1 and node.type==1 and self.link.count()>0):
-            raise Node.nodeError('this pattern has more than one node, cannot delete connector.')
+    def delete(self, using=None, keep_parents=False):
+        if(self.type==1 and self.link.count() > 0):
+            raise Node.nodeDeleteError('you can not delete the connector when pattern have other normal node')
         else:
-            self.link.remove(node)
-            node.link.remove(self)
-        return
+            for x in self.link.all():
+                for y in self.link.all():
+                    if (x.id != y.id):
+                        x.link.add(y)
+                        y.link.add(x)
+        return super(Node,self).delete()
+
+    # def deleteLink(self,node):
+    #     viewedNode=[]
+    #     if(isinstance(node,Node)==False):
+    #         raise TypeError('need Node type as input instead of '+str(type(node)))
+    #     else:
+    #         for i in Node.objects.all():
+    #             list=i.link.exclude(number__in=viewedNode)
+    #             for x in list:
+
+
 
     def __unicode__(self):
         return 'No. '+self.number
@@ -86,48 +95,13 @@ class Node(models.Model):
     class nodeInitialError(nodeError):
         pass
 
+    class nodeDeleteError(nodeError):
+        pass
+
 class Message(models.Model):
 
     message=models.CharField(max_length=64)
     nodeId=models.ForeignKey('homepage.Node', on_delete=models.CASCADE)
-
-class Path(models.Model):
-    #related_name:https://www.cnblogs.com/linxiyue/p/3667418.html
-    startNodeId=models.ForeignKey('homepage.Node', related_name='startNodeId',on_delete=models.CASCADE)
-    endNodeId=models.ForeignKey('homepage.Node', related_name='endNodeId', on_delete=models.CASCADE)
-    distance=models.FloatField(default=1)
-
-    def showLink(self):
-        link=[]
-        path=Path.objects.all()
-        for index in range(path.count()):
-            try:
-                link.append(path[index])
-            except IndexError:
-                break
-            else:
-                for i in link:
-                    if (i.startNodeId_id == path[index].endNodeId_id and i.endNodeId_id == path[index].startNodeId_id):
-                        link.remove(path[index])
-                        break
-        return link
-
-    def deleteLink(self,node1,node2):
-        path = self.objects.filter(startNodeId_id=node1.id or node2.id, endNodeId_id=node2.id or node1.id)
-        try:
-            path.delete()
-        except ObjectDoesNotExist:
-            raise Node.nodeError('the path is not exist')
-        finally:
-            return
-
-    class linkError(Exception):
-        def __init__(self, ErrorInfo):
-            super().__init__(self, ErrorInfo)  # 初始化父类
-            self.errorinfo = ErrorInfo
-
-        def __str__(self):
-            return self.errorinfo
 
 
 
