@@ -127,14 +127,19 @@ function addNode(type, pattern) {
     let links = this.forceLayout.links()
     let size = nodes.length; //Length of current pattern nodes
 
+    let connectorID = patterns[pattern].nodes[0].id
+    patterns[pattern].nodes.forEach(function (node) {
+        if (node.type == 1) connectorID = node.id
+    })
+
     if (nodes.length >= 1 && nodes.length < 3) {
         //link with connector
-        this.addLink(nodes[0].id, nodes[size - 1].id); // connector index, index of last addition
+        this.addLink(connectorID, nodes[size - 1].id); // connector index, index of last addition
         patterns[pattern].links++;
     } else if (size <= 4) {
         // Adding nodes 3,4
         //close loop with connector
-        this.addLink(nodes[0].id, nodes[size - 1].id); // connector index, index of last addition
+        this.addLink(connectorID, nodes[size - 1].id); // connector index, index of last addition
         this.addLink(nodes[size - 1].id, nodes[size - 2].id);
     } else if (size == 5) {
         // Need to do because of the way delete works
@@ -395,6 +400,11 @@ function createLink(s, t) {
         return
     }
 
+    if (this.forceLayout.nodes()[source].type == 0 || this.forceLayout.nodes()[target].type == 0) {
+        $(this).trigger(M.toast({html: 'Error: You can only link connecor nodes'}))
+        return
+    }
+
     this.forceLayout.links().push({
         source, target
     });
@@ -463,7 +473,16 @@ function moveConnectorTo(pattern, s, t) {
     let links = this.forceLayout.links();
 
     let source = -1, target = -1;
+
     let connectorID = patterns[pattern].nodes[0].id
+    patterns[pattern].nodes.forEach(function (node) {
+        if (node.type == 1) connectorID = node.id
+    })
+
+    console.log(patterns[pattern])
+    console.log(connectorID)
+    console.log(s)
+    console.log(links)
     if (!this._findLink(connectorID, s)) {
         console.log('source is not linked with connector');
         return
@@ -497,6 +516,7 @@ function moveConnectorTo(pattern, s, t) {
     //Check and add new link
     if (this._verifyNewLink(t, connectorID)) {
         // source = patterns[pattern].nodes[0].id;
+        // target = nodes[t].id;
         // target = nodes[t].id;
         source = find(connectorID)
         target = find(t)
