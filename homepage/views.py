@@ -160,9 +160,10 @@ def inactiveNode(request):
             #         node.save()
             #     else:
             #         raise Node.nodeError
-            for i in Node.objects.all():
-                i.status = True
-                i.save()
+
+            # for i in Node.objects.all():
+            #     i.status = True
+            #     i.save()
 
             nonconnectors = [x for x in Node.objects.all() if (x.type == 0 and x.status == True)]
             node = random.choice(nonconnectors)
