@@ -20,6 +20,10 @@
     }
 }()
 
+//TODO: if adding new pattern connect it to other pattern random
+// TODO: when removing, check connector nodes and ignore other connector nodes
+// TODO: if 3 nodes, need to close
+
 this.getNodes()
 
 setInterval(this.randomInactiveNodes, 15000); // Randomly activates node
@@ -835,6 +839,10 @@ function _findNodeByID(id) {
     return this.forceLayout.nodes().filter(d => d.id == id)[0];
 }
 
+function _findPatternByID(id) {
+    return this.forceLayout.nodes().filter(d => convertPatternToInt(d.pattern) == id)[0];
+}
+
 function _findLink(source, target) {
     return this.forceLayout.links().filter(d =>
         d.source.id == source && d.target.id == target)[0];
@@ -843,6 +851,14 @@ function _findLink(source, target) {
 function _nextID() {
     let id = 1;
     while (this._findNodeByID(id)) {
+        id++;
+    }
+    return id;
+}
+
+function _nextPatternID() {
+    let id = 1;
+    while (this._findPatternByID(id)) {
         id++;
     }
     return id;
@@ -868,12 +884,10 @@ function find(f) {
 
 function updateDropDown(nodes, link) {
     // Add Node
-    let numPatterns = 0
     var select = document.getElementById("add_pattern_dropdown");
     $('#add_pattern_dropdown').empty()
     nodes.forEach(function (name, value) {
         if (name.type == 1) {
-            numPatterns++
             var option = document.createElement('option');
             option.text = name.pattern;
             option.value = convertPatternToInt(name.pattern)
@@ -882,7 +896,7 @@ function updateDropDown(nodes, link) {
     })
     var option = document.createElement('option');
     option.text = 'New Pattern'
-    option.value = numPatterns + 1;
+    option.value = _nextPatternID()
     select.add(option, 0);
 
     //Delete Node
