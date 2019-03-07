@@ -52,8 +52,10 @@ class Node(models.Model):
         return
 
     def delete(self, using=None, keep_parents=False):
-        if(self.type==1 and self.link.count() > 0):
-            raise Node.nodeDeleteError('you can not delete the connector when pattern have other normal node')
+        if(self.type==1 and self.link.count() > 0): # What if the connector is linked to another connector?
+            for x in self.link.all():
+                if(x.type != 1):
+                    raise Node.nodeDeleteError('you can not delete the connector when pattern have other normal node')
         else:
             for x in self.link.all():
                 for y in self.link.all():

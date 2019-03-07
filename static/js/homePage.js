@@ -21,7 +21,6 @@
 }()
 
 //TODO: if adding new pattern connect it to other pattern random
-// TODO: when removing, check connector nodes and ignore other connector nodes
 // TODO: if 3 nodes, need to close
 
 this.getNodes()
@@ -140,11 +139,17 @@ function addNode(type, pattern) {
         //link with connector
         this.addLink(connectorID, nodes[size - 1].id); // connector index, index of last addition
         patterns[pattern].links++;
-    } else if (size <= 4) {
-        // Adding nodes 3,4
+    } else if (size < 4) {
+        // Adding node 3
         //close loop with connector
         this.addLink(connectorID, nodes[size - 1].id); // connector index, index of last addition
         this.addLink(nodes[size - 1].id, nodes[size - 2].id);
+    } else if (size == 4) {
+        // Adding node 4
+        //close loop with connector
+        this.addLink(connectorID, nodes[size - 1].id); // connector index, index of last addition
+        this.addLink(nodes[size - 1].id, nodes[size - 2].id);
+        this.addLink(nodes[size - 1].id, nodes[size - 3].id);
     } else if (size == 5) {
         // Need to do because of the way delete works
         // Connect with nodes with only 2 links
