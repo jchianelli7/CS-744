@@ -20,9 +20,9 @@
     }
 }()
 
-this.getNodes()
+// TODO: randomize inactive nodes
 
-setInterval(this.randomInactiveNodes, 15000); // Randomly activates node
+this.getNodes()
 
 $('#logout').on('click', function () {
     window.location.href = '/homepage/logout/'
@@ -37,6 +37,8 @@ for (var i = 0; i < 99; i++) { //max 99 patterns
     pattern['links'] = 0;
     patterns.push(pattern);
 }
+
+var randomCounter = 0
 
 //this.canvas = d3.select('#canvas').append('svg:svg').attr('width', '1200').attr('height', '800');
 var svg = d3.select('#canvas').append('svg').attr('width', '100%').attr('height', '100%')
@@ -65,6 +67,9 @@ while (force.alpha() > 0.05) { // You'll want to try out different, "small" valu
 if (safety < 500) {
     // Do nothing
 }
+
+
+setInterval(this.generateRandomCall, 1000); // Randomly activates node
 
 /* Globals End */
 
@@ -107,6 +112,7 @@ document.querySelector('#btn_node_active').addEventListener('click', e => {
 
 function addNode(type, pattern) {
     if (patterns[pattern].nodes.length == 7) $(this).trigger(M.toast({html: 'Error: Pattern cannot contain more than 7 nodes'})); //no more than 7 nodes
+
     let id = this._nextID()
     let number = 'N' + ("0" + id).slice(-2);
 
@@ -127,6 +133,20 @@ function addNode(type, pattern) {
     let links = this.forceLayout.links()
     let size = nodes.length; //Length of current pattern nodes
 
+    if (patterns[pattern].nodes.length == 1) {
+        // Connect it with another connector
+        var connectorNodes = []
+        this.forceLayout.nodes().forEach(function (node) {
+            if (node.type == 1 && node.id != id) connectorNodes.push(node)
+        })
+        console.log(connectorNodes)
+        if (connectorNodes.length > 0) {
+            // Link new pattern to random existing pattern
+            let randID = connectorNodes[Math.floor(Math.random() * connectorNodes.length)].id;
+            this.addLink(patterns[pattern].nodes[0].id, randID)
+        }
+    }
+
     let connectorID = patterns[pattern].nodes[0].id
     patterns[pattern].nodes.forEach(function (node) {
         if (node.type == 1) connectorID = node.id
@@ -136,11 +156,17 @@ function addNode(type, pattern) {
         //link with connector
         this.addLink(connectorID, nodes[size - 1].id); // connector index, index of last addition
         patterns[pattern].links++;
-    } else if (size <= 4) {
-        // Adding nodes 3,4
+    } else if (size < 4) {
+        // Adding node 3
         //close loop with connector
         this.addLink(connectorID, nodes[size - 1].id); // connector index, index of last addition
         this.addLink(nodes[size - 1].id, nodes[size - 2].id);
+    } else if (size == 4) {
+        // Adding node 4
+        //close loop with connector
+        this.addLink(connectorID, nodes[size - 1].id); // connector index, index of last addition
+        this.addLink(nodes[size - 1].id, nodes[size - 2].id);
+        this.addLink(nodes[size - 1].id, nodes[size - 3].id);
     } else if (size == 5) {
         // Need to do because of the way delete works
         // Connect with nodes with only 2 links
@@ -327,6 +353,14 @@ function activateNode(id) {
 
         }
     });
+}
+
+function generateRandomCall() {
+    var rounded = Math.round(Math.random() * 10 ) / 10;
+    randomCounter += rounded
+    console.log(randomCounter)
+    if(randomCounter > 4.7 && randomCounter < 5.0) this.randomInactiveNodes()
+    if(randomCounter > 5.0) randomCounter = 0
 }
 
 function randomInactiveNodes() {
@@ -835,6 +869,10 @@ function _findNodeByID(id) {
     return this.forceLayout.nodes().filter(d => d.id == id)[0];
 }
 
+function _findPatternByID(id) {
+    return this.forceLayout.nodes().filter(d => convertPatternToInt(d.pattern) == id)[0];
+}
+
 function _findLink(source, target) {
     return this.forceLayout.links().filter(d =>
         d.source.id == source && d.target.id == target)[0];
@@ -843,6 +881,14 @@ function _findLink(source, target) {
 function _nextID() {
     let id = 1;
     while (this._findNodeByID(id)) {
+        id++;
+    }
+    return id;
+}
+
+function _nextPatternID() {
+    let id = 1;
+    while (this._findPatternByID(id)) {
         id++;
     }
     return id;
@@ -868,12 +914,10 @@ function find(f) {
 
 function updateDropDown(nodes, link) {
     // Add Node
-    let numPatterns = 0
     var select = document.getElementById("add_pattern_dropdown");
     $('#add_pattern_dropdown').empty()
     nodes.forEach(function (name, value) {
         if (name.type == 1) {
-            numPatterns++
             var option = document.createElement('option');
             option.text = name.pattern;
             option.value = convertPatternToInt(name.pattern)
@@ -882,7 +926,7 @@ function updateDropDown(nodes, link) {
     })
     var option = document.createElement('option');
     option.text = 'New Pattern'
-    option.value = numPatterns + 1;
+    option.value = _nextPatternID()
     select.add(option, 0);
 
     //Delete Node
@@ -938,7 +982,3 @@ function updateDropDown(nodes, link) {
     })
     $('select').formSelect();
 }
-
-
-
-
