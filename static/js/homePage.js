@@ -925,6 +925,15 @@ function find(f) {
     return i;
 }
 
+function nodesIndexToID(ind) {
+    var id = -1
+    this.forceLayout.nodes().forEach(function (node, index) {
+        if (index == ind)
+            id = node.id
+    });
+    return id;
+}
+
 function updateDropDown(nodes, link) {
     // Add Node
     var select = document.getElementById("add_pattern_dropdown");
@@ -1008,4 +1017,26 @@ function updateDropDown(nodes, link) {
 
     $('select').formSelect();
 
+}
+
+function setPath() {
+    var paths = []
+    var links = this.forceLayout.links()
+    var nodes = this.forceLayout.nodes()
+    links.forEach(function (link) {
+        var s = link.source
+        var t = link.target
+        let dist = Math.sqrt(Math.pow((s.x - t.x), 2) + Math.pow((s.y - t.y), 2));
+        const path = {
+            source: s.id,
+            target: t.id,
+            distance: Math.round(dist),
+        };
+        paths.push(path);
+    })
+    return paths
+}
+
+function drawPath(path) {
+    console.log(path)
 }

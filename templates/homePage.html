@@ -159,11 +159,15 @@
 
 </div>
 
+<a id="path" class="waves-effect waves-light btn-small" style="margin: 6px 0 0 30px;">Get Path</a>
 </body>
 <script src="../../static/js/jquery-3.3.1.js"></script>
 <script src="../../static/js/materialize.min.js"></script>
 <script src='//cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.js'></script>
 <script src="../../static/js/homePage.js"></script>
+<script src="../../static/js/ShortestPathCalculator.js"></script>
+<script src="../../static/js/ShortestPathUtils.js"></script>
+
 
 <script>
     $(document).ready(function () {
@@ -197,6 +201,31 @@
         if (event.target == modal) {
             modal.style.display = "none";
         }
+    }
+
+    var path_btn = document.getElementById("path");
+    path_btn.onclick = function () {
+        // Gets source, target, and distance
+        var paths = setPath()
+        var sp = new ShortestPathCalculator(forceLayout.nodes(), paths);
+        var route = sp.findRoute(find(10), find(11));
+
+        // Formats result of path
+        var translatedRoute = []
+        translatedRoute["source"] = nodesIndexToID(route.source)
+        translatedRoute["target"] = nodesIndexToID(route.target)
+        translatedRoute["msg"] = route.mesg
+        translatedRoute["distance"] = route.distance
+        translatedRoute["paths"] = []
+        route.path.forEach(function (p) {
+            const path = {
+                source: nodesIndexToID(p.source),
+                target: nodesIndexToID(p.target)
+            }
+            translatedRoute.paths.push(path)
+        })
+        console.log(translatedRoute)
+        drawPath(translatedRoute.paths)
     }
 
 </script>
