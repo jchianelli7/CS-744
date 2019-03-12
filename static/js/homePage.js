@@ -80,11 +80,22 @@ setInterval(this.generateRandomCall, 60000); // Randomly activates node
 document.querySelector('#btn_node').addEventListener('click', e => {
     var e = document.getElementById("add_pattern_dropdown");
     var pattern = e.options[e.selectedIndex].value;
-    if (patterns[pattern].nodes.length == 0) {
-        // 0 is non-connector, 1 is connector
-        this.addNode(1, pattern);
+
+    if (this.forceLayout.nodes().length == 0)
+        this.addNode(1, pattern, -1) // very first node
+    else if (patterns[pattern].nodes.length == 0) {
+        // New Connector Node, prompt modal
+        var connectorNodes = []
+        this.forceLayout.nodes().forEach(function (node) {
+            if (node.type == 1) connectorNodes.push(node)
+        })
+        if (connectorNodes.length > 0) {
+            // Link new pattern to modal selected pattern
+            $('#modalButton').click()
+            return;
+        }
     } else {
-        this.addNode(0, pattern);
+        this.addNode(0, pattern, -1);
     }
 });
 
@@ -110,11 +121,30 @@ document.querySelector('#btn_node_active').addEventListener('click', e => {
     this.activateNode(id);
 });
 
+document.querySelector('#modal_btn_node').addEventListener('click', e => {
+    var e = document.getElementById("modal_pattern_dropdown");
+    var linkPattern = e.options[e.selectedIndex].value;
+    var f = document.getElementById("add_pattern_dropdown");
+    var pattern = f.options[f.selectedIndex].value;
+    var linkPatternID = -1
+
+    this.forceLayout.nodes().forEach(function (node) {
+        if (convertPatternToInt(node.pattern) == linkPattern) {
+            if (node.type == 1) linkPatternID = node.id
+        }
+    })
+    if (linkPatternID != -1)
+        this.addNode(1, pattern, linkPatternID);
+    else
+        $(this).trigger(M.toast({html: 'Error: unable to add new pattern to specified link.'}));
+});
 
 /* Button Event End */
 
-function addNode(type, pattern) {
-    if (patterns[pattern].nodes.length == 7) $(this).trigger(M.toast({html: 'Error: Pattern cannot contain more than 7 nodes'})); //no more than 7 nodes
+function addNode(type, pattern, linkPattern) {
+    if (patterns[pattern].nodes.length == 7) {
+        $(this).trigger(M.toast({html: 'Error: Pattern cannot contain more than 7 nodes'})); //no more than 7 nodes
+    }
 
     let id = this._nextID()
     let number = 'N' + ("0" + id).slice(-2);
@@ -132,23 +162,17 @@ function addNode(type, pattern) {
     patterns[pattern].nodes.push(node);
     this.forceLayout.nodes().push(node);
 
+    if (patterns[pattern].nodes.length == 1) {
+        // Connect it with another connector
+        if (linkPattern != -1) {
+            // Link new pattern to random existing pattern
+            this.addLink(patterns[pattern].nodes[0].id, linkPattern)
+        }
+    }
+
     let nodes = patterns[pattern].nodes; //Nodes in current pattern
     let links = this.forceLayout.links()
     let size = nodes.length; //Length of current pattern nodes
-
-    if (patterns[pattern].nodes.length == 1) {
-        // Connect it with another connector
-        var connectorNodes = []
-        this.forceLayout.nodes().forEach(function (node) {
-            if (node.type == 1 && node.id != id) connectorNodes.push(node)
-        })
-        console.log(connectorNodes)
-        if (connectorNodes.length > 0) {
-            // Link new pattern to random existing pattern
-            let randID = connectorNodes[Math.floor(Math.random() * connectorNodes.length)].id;
-            this.addLink(patterns[pattern].nodes[0].id, randID)
-        }
-    }
 
     let connectorID = patterns[pattern].nodes[0].id
     patterns[pattern].nodes.forEach(function (node) {
@@ -186,7 +210,7 @@ function addNode(type, pattern) {
             })
             if (linkCount.length == 2) nodesWith2Links.push(node)
         })
-        console.log(nodesWith2Links)
+
         if (nodesWith2Links.length != 2) {
             //remove links between last node added, and first nonconnector node
             // will always work because prior, everything connected to everything
@@ -213,7 +237,6 @@ function addNode(type, pattern) {
             })
             if (linkCount.length == 2) nodesWith2Links.push(node)
         })
-        console.log(nodesWith2Links)
 
         //get neighbor of node w 2 links
         var neighbor = []
@@ -224,7 +247,6 @@ function addNode(type, pattern) {
                 neighbor.push(e.source.id)
             }
         })
-        console.log(neighbor)
 
         this.removeLinkBetween(nodesWith2Links[0].id, neighbor[0]);
         //close loop with new node and first non nonconnector connector
@@ -253,6 +275,8 @@ function addNode(type, pattern) {
         success: function (response) {
             // console.log(JSON.parse(response)) // log the returned json to the console
             console.log("success"); // another sanity check
+            var modal = document.getElementById('myModal');
+            modal.style.display = "none";
             _redraw()
         },
 
@@ -359,11 +383,11 @@ function activateNode(id) {
 }
 
 function generateRandomCall() {
-    var rounded = Math.round(Math.random() * 10 ) / 10;
+    var rounded = Math.round(Math.random() * 10) / 10;
     randomCounter += rounded
     console.log(randomCounter)
-    if(randomCounter > 4.7 && randomCounter < 5.0) this.randomInactiveNodes()
-    if(randomCounter > 5.0) randomCounter = 0
+    if (randomCounter > 4.7 && randomCounter < 5.0) this.randomInactiveNodes()
+    if (randomCounter > 5.0) randomCounter = 0
 }
 
 function randomInactiveNodes() {
@@ -983,5 +1007,19 @@ function updateDropDown(nodes, link) {
         option.value = name.id
         selectTarget.add(option, 0);
     })
+
+    // Add Node
+    var select = document.getElementById("modal_pattern_dropdown");
+    $('#modal_pattern_dropdown').empty()
+    nodes.forEach(function (name, value) {
+        if (name.type == 1) {
+            var option = document.createElement('option');
+            option.text = name.pattern;
+            option.value = convertPatternToInt(name.pattern)
+            select.add(option, 0);
+        }
+    })
+
     $('select').formSelect();
+
 }
