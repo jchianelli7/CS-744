@@ -149,7 +149,7 @@
     <!-- Modal content -->
     <div class="modal-content">
         <span class="close_modal">&times;</span>
-        <h5>Add Connector to what pattern?</h5>
+        <h5 id="modal_text"></h5>
         <div class="input-field" style="width: 150px;margin:1px 0 0 1px;">
             <select id="modal_pattern_dropdown"></select>
         </div>
@@ -183,6 +183,7 @@
 
     // When the user clicks on the button, open the modal
     btn.onclick = function () {
+        console.log(modal)
         modal.style.display = "block";
     }
 

@@ -22,8 +22,7 @@
 
 // TODO: on click, display node id
 // TODO: shortest path from __ to __
-// TODO: add new pattern ask connect to what
-// TODO: add >7 nodes, ask new pattern
+// TODO: demo p2-6 -- p1-3 -- p3-4
 
 this.getNodes()
 
@@ -91,9 +90,14 @@ document.querySelector('#btn_node').addEventListener('click', e => {
         })
         if (connectorNodes.length > 0) {
             // Link new pattern to modal selected pattern
+            $('#modal_text').text('Add new connector to what pattern?')
             $('#modalButton').click()
             return;
         }
+    } else if (patterns[pattern].nodes.length == 7) {
+        $('#modal_text').text('Error: Pattern cannot contain more than 7 nodes. Create new pattern linked to which existing pattern?')
+        $('#modalButton').click()
+        return;
     } else {
         this.addNode(0, pattern, -1);
     }
@@ -128,6 +132,11 @@ document.querySelector('#modal_btn_node').addEventListener('click', e => {
     var pattern = f.options[f.selectedIndex].value;
     var linkPatternID = -1
 
+    if (patterns[pattern].nodes.length == 7) {
+        // pattern is new pattern
+        pattern = this._nextPatternID()
+    } // Otherwise use intended pattern
+
     this.forceLayout.nodes().forEach(function (node) {
         if (convertPatternToInt(node.pattern) == linkPattern) {
             if (node.type == 1) linkPatternID = node.id
@@ -143,6 +152,7 @@ document.querySelector('#modal_btn_node').addEventListener('click', e => {
 
 function addNode(type, pattern, linkPattern) {
     if (patterns[pattern].nodes.length == 7) {
+        // Should never display
         $(this).trigger(M.toast({html: 'Error: Pattern cannot contain more than 7 nodes'})); //no more than 7 nodes
     }
 
@@ -385,7 +395,6 @@ function activateNode(id) {
 function generateRandomCall() {
     var rounded = Math.round(Math.random() * 10) / 10;
     randomCounter += rounded
-    console.log(randomCounter)
     if (randomCounter > 4.7 && randomCounter < 5.0) this.randomInactiveNodes()
     if (randomCounter > 5.0) randomCounter = 0
 }
@@ -507,7 +516,6 @@ function _verifyNewLink(source, target) {
 
 function removeLinkBetween(id1, id2) {
     let links = this.forceLayout.links();
-    console.log('removing links between' + id1 + ' and ' + id2)
     let i = 0;
     while (i < links.length) {
         if ((links[i].source.id == id1 && links[i].target.id == id2) ||
@@ -528,8 +536,6 @@ function removeLinkBetween(id1, id2) {
 
 // Use only in delete!!!
 function moveConnectorTo(pattern, s, t) {
-    console.log('moving connector from ' + s + ' to ' + t)
-
     let nodes = this.forceLayout.nodes();
     let links = this.forceLayout.links();
 
@@ -540,18 +546,12 @@ function moveConnectorTo(pattern, s, t) {
         if (node.type == 1) connectorID = node.id
     })
 
-    console.log(patterns[pattern])
-    console.log(connectorID)
-    console.log(s)
-    console.log(links)
     if (!this._findLink(connectorID, s)) {
         console.log('source is not linked with connector');
         return
     }
 
     //Remove old link from connector to source
-    // this.removeLinkBetween(s, connectorID);
-    console.log('removing links between' + s + ' and ' + connectorID)
     let i = 0;
     while (i < links.length) {
         if ((links[i].source.id == s && links[i].target.id == connectorID) ||
@@ -561,18 +561,6 @@ function moveConnectorTo(pattern, s, t) {
         else
             i++;
     }
-
-    // If pattern node size is 5, need to also remove link from new id and node to be deleted
-    // console.log('removing links between' + s + ' and ' + t)
-    // i = 0;
-    // while (i < links.length) {
-    //     if ((links[i].source.id == s && links[i].target.id == t) ||
-    //         (links[i].source.id == t && links[i].target.id == s)) {
-    //         this.forceLayout.links().splice(i, 1);
-    //     }
-    //     else
-    //         i++;
-    // }
 
     //Check and add new link
     if (this._verifyNewLink(t, connectorID)) {
@@ -598,13 +586,11 @@ function moveConnectorTo(pattern, s, t) {
     linksUpdated.exit().remove();
     this.forceLayout.start();
 
-    console.log(this.forceLayout.links())
     // update database with new links
     let data = {
         'link': []
     }
     data.link = this.forceLayout.links()
-    console.log(data)
     $.ajax({
         url: "/homepage/addNode/", // the endpoint
         type: "POST", // http method
