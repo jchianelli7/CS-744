@@ -20,7 +20,10 @@
     }
 }()
 
-// TODO: randomize inactive nodes
+// TODO: on click, display node id
+// TODO: shortest path from __ to __
+// TODO: add new pattern ask connect to what
+// TODO: add >7 nodes, ask new pattern
 
 this.getNodes()
 
@@ -69,7 +72,7 @@ if (safety < 500) {
 }
 
 
-setInterval(this.generateRandomCall, 1000); // Randomly activates node
+setInterval(this.generateRandomCall, 60000); // Randomly activates node
 
 /* Globals End */
 
