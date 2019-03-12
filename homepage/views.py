@@ -153,21 +153,9 @@ def inactiveNode(request):
         response = redirect('/homepage/logout/')
     else:
         try:
-            # node = Node.objects.filter(id=random.randint(1, Node.objects.count()))[0] #ID might not be within count
-            # if (random.randint(0, 2) == 1 and node.status == True):
-            #     if (random.randint(0, 2) == 1 and node.status == True):
-            #         node.status = False
-            #         node.save()
-            #     else:
-            #         raise Node.nodeError
-
-            # for i in Node.objects.all():
-            #     i.status = True
-            #     i.save()
-
-            nonconnectors = [x for x in Node.objects.all() if (x.type == 0 and x.status == True)]
-            if(len(nonconnectors) >= 1):
-                node = random.choice(nonconnectors)
+            inactiveNodes = [x for x in Node.objects.all() if (x.status == True)]
+            if(len(inactiveNodes) >= 1):
+                node = random.choice(inactiveNodes)
                 node.status = False
                 node.save()
 
