@@ -23,6 +23,7 @@
 // TODO: on click, display node id
 // TODO: shortest path from __ to __
 // TODO: demo p2-6 -- p1-3 -- p3-4
+// TODO: Cleanup shortest path
 
 this.getNodes()
 
@@ -69,6 +70,8 @@ while (force.alpha() > 0.05) { // You'll want to try out different, "small" valu
 if (safety < 500) {
     // Do nothing
 }
+
+var path = []
 
 
 setInterval(this.generateRandomCall, 60000); // Randomly activates node
@@ -870,8 +873,29 @@ function _updateNodes() {
 function _updateLinks() {
     const layout_links = this.forceLayout.links()
     const links = this.vis.select('.linkContainer').selectAll(".link").data(layout_links);
-    links.enter().insert('line').attr('class', 'link').style('stroke', 'white').style('stroke-width', 5)
+    links.enter().insert('line').attr("class", 'link').style('stroke', 'white').style('stroke-width', 5)
+        .attr('id', d => d.source.id + "," + d.target.id)
         .attr('x1', d => d.source.x).attr('y1', d => d.source.y).attr('x2', d => d.target.x).attr('y2', d => d.target.y);
+
+    links.transition().attr("class", 'link').style('stroke', function (d) {
+        var isPath = false
+        var path = getPath()
+        if (typeof path !== 'undefined' && path.length > 0) {
+            // Draw the path
+            path.forEach(function (p) {
+                if ((d.source.id == p.source && d.target.id == p.target) || (d.source.id == p.target && d.target.id == p.source)) {
+                    isPath = true
+                }
+            })
+            return isPath ? "blue" : "white"
+        } else {
+            // No path to draw
+            return "white"
+        }
+    }).style('stroke-width', 5)
+        .attr('id', d => d.source.id + "," + d.target.id)
+        .attr('x1', d => d.source.x).attr('y1', d => d.source.y).attr('x2', d => d.target.x).attr('y2', d => d.target.y);
+
 
     links.exit().remove();
 
@@ -1038,5 +1062,15 @@ function setPath() {
 }
 
 function drawPath(path) {
-    console.log(path)
+    this.path = path
+    this._redraw()
+}
+
+function getPath() {
+    return this.path
+}
+
+function clearPath() {
+    this.path = []
+    this._redraw()
 }
