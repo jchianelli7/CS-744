@@ -218,15 +218,21 @@
         translatedRoute["msg"] = route.mesg
         translatedRoute["distance"] = route.distance
         translatedRoute["paths"] = []
-        route.path.forEach(function (p) {
-            const path = {
-                source: nodesIndexToID(p.source),
-                target: nodesIndexToID(p.target)
-            }
-            translatedRoute.paths.push(path)
-        })
-        drawPath(translatedRoute.paths)
-        setTimeout(clearPath, 10000)
+        console.log(route)
+        if (route.path == null) {
+            $(this).trigger(M.toast({html: 'Error: Unable to find a path.'}));
+            console.log('no path found')
+        } else {
+            route.path.forEach(function (p) {
+                const path = {
+                    source: nodesIndexToID(p.source),
+                    target: nodesIndexToID(p.target)
+                }
+                translatedRoute.paths.push(path)
+            })
+            drawPath(translatedRoute.paths)
+            setTimeout(clearPath, 10000)
+        }
     }
 
 </script>

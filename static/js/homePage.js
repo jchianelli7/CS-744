@@ -845,7 +845,8 @@ function _updateNodes() {
             const node = d3.select(this);
             // if(d.type == 1) node.classed("fixed", d.fixed = true);
             node.append('circle').attr('r', 0)
-                .style('fill', d => d.type == 1 ? "blue" : (d.status == true ? "white" : "red"))
+            //.style('fill', d => d.type == 1 ? "blue" : (d.status == true ? "white" : "red"))
+                .style('fill', d => d.status == true ? (d.type == 1 ? "blue" : "white") : "red")
                 .transition().duration(750).ease('elastic')
                 .attr('r', 20);
             node.append('text')
@@ -1000,12 +1001,10 @@ function updateDropDown(nodes, link) {
     var select = document.getElementById("activate_dropdown");
     $('#activate_dropdown').empty()
     nodes.forEach(function (name, value) {
-        if (name.type == 0) {
-            var option = document.createElement('option');
-            option.text = name.number;
-            option.value = name.id
-            select.add(option, 0);
-        }
+        var option = document.createElement('option');
+        option.text = name.number;
+        option.value = name.id
+        select.add(option, 0);
     })
 
     // Links
@@ -1050,14 +1049,17 @@ function setPath() {
     links.forEach(function (link) {
         var s = link.source
         var t = link.target
-        let dist = Math.sqrt(Math.pow((s.x - t.x), 2) + Math.pow((s.y - t.y), 2));
-        const path = {
-            source: s.id,
-            target: t.id,
-            distance: Math.round(dist),
-        };
-        paths.push(path);
+        if (s.status == true && t.status == true) { // Only active nodes
+            let dist = Math.sqrt(Math.pow((s.x - t.x), 2) + Math.pow((s.y - t.y), 2));
+            const path = {
+                source: s.id,
+                target: t.id,
+                distance: Math.round(dist),
+            };
+            paths.push(path);
+        }
     })
+    console.log(paths)
     return paths
 }
 
