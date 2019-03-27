@@ -142,6 +142,33 @@
     <div id="canvas"></div>
 </div>
 
+<!--text area-->
+<div class="textArea">
+    <h6 style="position: absolute;margin: 33px 0 0 10px;">
+        Send message from
+    </h6>
+    <div style="width: 90px;position: absolute; margin: 20px 0 0 180px;">
+        <select id="text_source_dropdown">
+            <option value="" disabled selected>From</option>
+        </select>
+    </div>
+    <h6 style="position: absolute;margin: 33px 0 0 280px;">
+        to
+    </h6>
+    <div style="width: 90px; position: absolute; margin: 20px 0 0 310px;">
+        <select id="text_target_dropdown">
+            <option value="" disabled selected>To</option>
+        </select>
+    </div>
+    <div>
+        <a id="send" class="waves-effect waves-light btn"
+           style="width: 90px; position: absolute; margin: 24px 0 0 660px;">Send</a>
+    </div>
+    <div class="input-field col s6" style="width: 600px;margin: 100px 0 0 150px;">
+        <input id="input_text" type="text" data-length="50">
+        <label for="input_text">Input text</label>
+    </div>
+</div>
 <!-- Trigger/Open The Modal -->
 <button id="modalButton" style="display: none">Open Modal</button>
 
@@ -175,6 +202,7 @@
         $('.collapsible').collapsible();
         $('.dropdown-trigger').dropdown();
         $('select').formSelect();
+        $('input#input_text, textarea#textarea2').characterCounter();
     });
 
     // Get the modal

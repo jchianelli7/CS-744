@@ -11,3 +11,11 @@ h6{
 #logout{
   margin-top: 30%;
 }
+
+.textArea{
+  height: 221px;
+  width: 1000px;
+  position: absolute;
+  margin-left: 300px;
+  margin-top: 600px;
+}

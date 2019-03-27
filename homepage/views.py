@@ -154,7 +154,7 @@ def inactiveNode(request):
     else:
         try:
             inactiveNodes = [x for x in Node.objects.all() if (x.status == True)]
-            if(len(inactiveNodes) >= 1):
+            if (len(inactiveNodes) >= 1):
                 node = random.choice(inactiveNodes)
                 node.status = False
                 node.save()
@@ -225,3 +225,36 @@ def bad_request(message):
                             content_type='application/json')
     response.status_code = 400
     return response
+
+
+# def addMessage(request):
+#     if (request.COOKIES.get('username') == None or request.COOKIES.get('is_superuser') == None):
+#         response = redirect('/homepage/logout/')
+#     else:
+#         request = simplejson.loads(request.body)
+#         Message.objects.create(message=request['message'], nodeId_id=request['id']).save()
+#         response = HttpResponse()
+#     return response
+#
+#
+# def getMessage(request):
+#     if (request.COOKIES.get('username') == None or request.COOKIES.get('is_superuser') == None):
+#         response = redirect('/homepage/logout/')
+#     else:
+#         request = simplejson.loads(request.body)
+#         user = User
+#         user.username = request.COOKIES.get('username')
+#         user.is_superuser = request.COOKIES.get('is_superuser')
+#         messageList = []
+#         try:
+#             for i in Message.objects.filter(nodeId_id=request['id']):
+#                 mesg = {'id': i.nodeId, 'message': i.message}
+#                 messageList.append(mesg)
+#
+#             resp = {'message': messageList}
+#             response = HttpResponse(json.dumps(resp))
+#         except IndexError:
+#             response = HttpResponse(json.dumps({'error': "empty message"}))
+#         finally:
+#             pass
+#     return response

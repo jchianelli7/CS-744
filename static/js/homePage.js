@@ -151,6 +151,28 @@ document.querySelector('#modal_btn_node').addEventListener('click', e => {
         $(this).trigger(M.toast({html: 'Error: unable to add new pattern to specified link.'}));
 });
 
+$('#send').on('click',function () {
+        let textLen = $('#input_text').val().length;
+        if (textLen>50){
+            $('#send').trigger(M.toast({html: 'The length of the text should below 50.'}))
+        }else if (textLen<1){
+            $('#send').trigger(M.toast({html: 'Please enter your message.'}))
+        } else {
+            $.ajax({
+                type:"post",
+                url:"need to fill in url here",
+                data:JSON.stringify(answerInfo),
+                success:function () {
+                    alert(1)
+            //  need to be implemented
+                },
+                error:function () {
+            //  need to be implemented
+                }
+            })
+        }
+    })
+
 /* Button Event End */
 
 function addNode(type, pattern, linkPattern) {
@@ -1038,8 +1060,27 @@ function updateDropDown(nodes, link) {
         }
     })
 
-    $('select').formSelect();
+    // Send Message
+    $('#text_source_dropdown').empty()
+    $('#text_target_dropdown').empty()
 
+    var textSource = document.getElementById("text_source_dropdown");
+    nodes.forEach(function (name, value) {
+        var option = document.createElement('option');
+        option.text = name.number;
+        option.value = name.id
+        textSource.add(option, 1);
+    })
+
+    var textTarget = document.getElementById("text_target_dropdown");
+    nodes.forEach(function (name, value) {
+        var option = document.createElement('option');
+        option.text = name.number;
+        option.value = name.id
+        textTarget.add(option, 0);
+    })
+
+    $('select').formSelect();
 }
 
 function setPath() {
