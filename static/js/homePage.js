@@ -149,6 +149,7 @@ document.querySelector('#modal_btn_node').addEventListener('click', e => {
 });
 
 $('#send').on('click', function () {
+    let text = $('#input_text').val()
     let textLen = $('#input_text').val().length;
     if (textLen > 50) {
         $('#send').trigger(M.toast({html: 'The length of the text should below 50.'}))
@@ -189,20 +190,29 @@ $('#send').on('click', function () {
             setTimeout(clearPath, 10000)
         }
 
+        let data = {
+            'message': text,
+            'id': id2
+        }
 
-        //TODO: Post message
-        // $.ajax({
-        //     type: "post",
-        //     url: "need to fill in url here",
-        //     data: JSON.stringify(answerInfo),
-        //     success: function () {
-        //         alert(1)
-        //         //  need to be implemented
-        //     },
-        //     error: function () {
-        //         //  need to be implemented
-        //     }
-        // })
+        $.ajax({
+            url: "/homepage/addMessage/", // the endpoint
+            type: "POST", // http method
+            data: JSON.stringify(data),
+
+            // handle a successful response
+            success: function (response) {
+                console.log("Message sent"); // another sanity check
+
+            },
+
+            // handle a non-successful response
+            error: function (xhr, errmsg, err) {
+                $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: " + errmsg +
+                    " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+                console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+            }
+        });
     }
 })
 
