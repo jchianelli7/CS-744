@@ -21,9 +21,6 @@
 }()
 
 // TODO: on click, display node id
-// TODO: shortest path from __ to __
-// TODO: demo p2-6 -- p1-3 -- p3-4
-// TODO: Cleanup shortest path
 
 this.getNodes()
 
@@ -151,27 +148,63 @@ document.querySelector('#modal_btn_node').addEventListener('click', e => {
         $(this).trigger(M.toast({html: 'Error: unable to add new pattern to specified link.'}));
 });
 
-$('#send').on('click',function () {
-        let textLen = $('#input_text').val().length;
-        if (textLen>50){
-            $('#send').trigger(M.toast({html: 'The length of the text should below 50.'}))
-        }else if (textLen<1){
-            $('#send').trigger(M.toast({html: 'Please enter your message.'}))
+$('#send').on('click', function () {
+    let textLen = $('#input_text').val().length;
+    if (textLen > 50) {
+        $('#send').trigger(M.toast({html: 'The length of the text should below 50.'}))
+    } else if (textLen < 1) {
+        $('#send').trigger(M.toast({html: 'Please enter your message.'}))
+    } else {
+        // Send message, get shortest path
+        // Gets source, target, and distance
+        var e = document.getElementById("text_source_dropdown");
+        var f = document.getElementById("text_target_dropdown");
+        var id1 = e.options[e.selectedIndex].value;
+        var id2 = f.options[f.selectedIndex].value;
+
+        var paths = setPath()
+        var sp = new ShortestPathCalculator(forceLayout.nodes(), paths);
+        var route = sp.findRoute(find(id1), find(id2));
+
+        // Formats result of path
+        var translatedRoute = []
+        translatedRoute["source"] = nodesIndexToID(route.source)
+        translatedRoute["target"] = nodesIndexToID(route.target)
+        translatedRoute["msg"] = route.mesg
+        translatedRoute["distance"] = route.distance
+        translatedRoute["paths"] = []
+        console.log(route)
+        if (route.path == null) {
+            $(this).trigger(M.toast({html: 'Error: Unable to find a path.'}));
+            console.log('no path found')
         } else {
-            $.ajax({
-                type:"post",
-                url:"need to fill in url here",
-                data:JSON.stringify(answerInfo),
-                success:function () {
-                    alert(1)
-            //  need to be implemented
-                },
-                error:function () {
-            //  need to be implemented
+            route.path.forEach(function (p) {
+                const path = {
+                    source: nodesIndexToID(p.source),
+                    target: nodesIndexToID(p.target)
                 }
+                translatedRoute.paths.push(path)
             })
+            drawPath(translatedRoute.paths)
+            setTimeout(clearPath, 10000)
         }
-    })
+
+
+        //TODO: Post message
+        // $.ajax({
+        //     type: "post",
+        //     url: "need to fill in url here",
+        //     data: JSON.stringify(answerInfo),
+        //     success: function () {
+        //         alert(1)
+        //         //  need to be implemented
+        //     },
+        //     error: function () {
+        //         //  need to be implemented
+        //     }
+        // })
+    }
+})
 
 /* Button Event End */
 
@@ -1100,7 +1133,6 @@ function setPath() {
             paths.push(path);
         }
     })
-    console.log(paths)
     return paths
 }
 
