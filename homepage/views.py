@@ -241,20 +241,17 @@ def getMessage(request):
     if (request.COOKIES.get('username') == None or request.COOKIES.get('is_superuser') == None):
         response = redirect('/homepage/logout/')
     else:
-        request = simplejson.loads(request.body)
-        user = User
-        user.username = request.COOKIES.get('username')
-        user.is_superuser = request.COOKIES.get('is_superuser')
-        messageList = []
         try:
+            request = simplejson.loads(request.body)
+            messages = []
             for i in Message.objects.filter(nodeId_id=request['id']):
-                mesg = {'id': i.nodeId, 'message': i.message}
-                messageList.append(mesg)
+                mesg = {'id': str(i.nodeId), 'message': str(i.message)}
+                messages.append(mesg)
 
-            resp = {'message': messageList}
-            response = HttpResponse(json.dumps(resp))
+            type(messages)
+
         except IndexError:
-            response = HttpResponse(json.dumps({'error': "empty message"}))
-        finally:
-            pass
-    return response
+            return bad_request(message='Error: Count not retrieve messages')
+
+        response = HttpResponse(json.dumps({'message': messages}))
+        return response

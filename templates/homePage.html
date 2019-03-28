@@ -28,6 +28,11 @@
             margin: 0;
         }
 
+        .tab {
+            margin-left: 40px;
+        }
+
+
     </style>
 </head>
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -170,7 +175,8 @@
     </div>
 </div>
 <!-- Trigger/Open The Modal -->
-<button id="modalButton" style="display: none">Open Modal</button>
+<button id="modalButton" style="display: none"></button>
+<button id="messageModalButton" style="display: none"></button>
 
 <!-- The Modal -->
 <div id="myModal" class="modal">
@@ -184,10 +190,24 @@
         <a id="modal_btn_node" class="waves-effect waves-light btn-small" style="margin: 6px 0 0 30px;">Add
             Node</a>
     </div>
-
 </div>
 
-<a id="path" class="waves-effect waves-light btn-small" style="margin: 6px 0 0 30px;">Get Path</a>
+<!-- The Message Modal -->
+<div id="messageModal" class="modal">
+    <!-- Modal content -->
+    <div class="modal-content">
+        <span class="close_modal_message">&times;</span>
+        <div class="row">
+            <h5 id="message_modal_id" style="display: inline;"></h5>
+            <h5 id="message_modal_pattern" class="tab" style="display: inline;"></h5>
+            <h5 id="message_modal_status" class="tab" style="display: inline;"></h5>
+            <h5>Messages:</h5>
+            <ul id="messages_list"></ul>
+
+        </div>
+    </div>
+</div>
+
 </body>
 <script src="../../static/js/jquery-3.3.1.js"></script>
 <script src="../../static/js/materialize.min.js"></script>
@@ -207,22 +227,31 @@
 
     // Get the modal
     var modal = document.getElementById('myModal');
+    var messageModal = document.getElementById('messageModal');
 
     // Get the button that opens the modal
     var btn = document.getElementById("modalButton");
+    var messageBtn = document.getElementById("messageModalButton");
 
     // Get the <span> element that closes the modal
     var span = document.getElementsByClassName("close_modal")[0];
+    var spanMessage = document.getElementsByClassName("close_modal_message")[0];
+
 
     // When the user clicks on the button, open the modal
     btn.onclick = function () {
-        console.log(modal)
         modal.style.display = "block";
+    }
+    messageBtn.onclick = function () {
+        messageModal.style.display = "block";
     }
 
     // When the user clicks on <span> (x), close the modal
     span.onclick = function () {
         modal.style.display = "none";
+    }
+    spanMessage.onclick = function () {
+        messageModal.style.display = "none"
     }
 
     // When the user clicks anywhere outside of the modal, close it
@@ -230,38 +259,11 @@
         if (event.target == modal) {
             modal.style.display = "none";
         }
-    }
-
-    var path_btn = document.getElementById("path");
-    path_btn.onclick = function () {
-        // Gets source, target, and distance
-        var paths = setPath()
-        var sp = new ShortestPathCalculator(forceLayout.nodes(), paths);
-        var route = sp.findRoute(find(10), find(11));
-
-        // Formats result of path
-        var translatedRoute = []
-        translatedRoute["source"] = nodesIndexToID(route.source)
-        translatedRoute["target"] = nodesIndexToID(route.target)
-        translatedRoute["msg"] = route.mesg
-        translatedRoute["distance"] = route.distance
-        translatedRoute["paths"] = []
-        console.log(route)
-        if (route.path == null) {
-            $(this).trigger(M.toast({html: 'Error: Unable to find a path.'}));
-            console.log('no path found')
-        } else {
-            route.path.forEach(function (p) {
-                const path = {
-                    source: nodesIndexToID(p.source),
-                    target: nodesIndexToID(p.target)
-                }
-                translatedRoute.paths.push(path)
-            })
-            drawPath(translatedRoute.paths)
-            setTimeout(clearPath, 10000)
+        if (event.target == messageModal) {
+            messageModal.style.display = "none"
         }
     }
+
 
 </script>
 </html>

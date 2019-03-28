@@ -20,8 +20,6 @@
     }
 }()
 
-// TODO: on click, display node id
-
 this.getNodes()
 
 $('#logout').on('click', function () {
@@ -901,6 +899,7 @@ function draw(nodes, links) {
 function _updateNodes() {
     const nodes = this.forceLayout.nodes()
     const sel = this.vis.select('.nodeContainer').selectAll('.node');
+
     const binding = sel.data(nodes, function (d) {
         return d.id
     }); //key that defines each item in the array. https://stackoverflow.com/questions/44891369/how-to-remove-node-in-d3-force-layout
@@ -924,7 +923,8 @@ function _updateNodes() {
                 .attr('font-size', 8)
                 .attr('fill', 'black')
                 .attr('dx', 25)
-                .attr('dy', 4)
+                .attr('dy', 4);
+            node.on("click", clickNode);
         });
     }).call(this.forceLayout.drag);
 
@@ -1159,3 +1159,47 @@ function clearPath() {
     this.path = []
     this._redraw()
 }
+
+function clickNode(d) {
+    console.log(d);
+    $('#message_modal_id').text("ID: " + d.id)
+    $('#message_modal_pattern').text("Pattern: " + d.pattern)
+    $('#message_modal_status').text("Status: " + (d.status == "true" ? "Active" : "Inactive"))
+    $('#messages_list').empty()
+
+    let data = {
+        'id': d.id
+    }
+
+    $.ajax({
+        url: "/homepage/getMessage/", // the endpoint
+        type: "POST", // http method
+        data: JSON.stringify(data),
+
+        // handle a successful response
+        success: function (response) {
+            var resp = JSON.parse(response)
+            console.log(resp)
+            if (resp.message.length == 0) {
+                $(this).trigger(M.toast({html: 'Alert: Node contains no messages.'}))
+            } else {
+                var items = [];
+                $.each(resp.message, function (i, item) {
+                    items.push('<li>' + (i + 1) + " : " + item.message + '</li>');
+                });
+                $('#messages_list').append(items.join(''));
+            }
+        },
+
+        // handle a non-successful response
+        error: function (xhr, errmsg, err) {
+            // console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+            $(this).trigger(M.toast({html: xhr.responseJSON.message}))
+        }
+    });
+
+    // Show the modal
+    $('#messageModalButton').click()
+}
+
+
