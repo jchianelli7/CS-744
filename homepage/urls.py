@@ -10,4 +10,6 @@ urlpatterns = [
     path('deleteNode/', views.deleteNode, name="deleteNode"),
     path('inactiveNode/', views.inactiveNode, name="inactiveNode"),
     path('activeNode/', views.activeNode, name="activeNode"),
+    path('addMessage/', views.addMessage, name="addMessage"),
+    path('getMessage/', views.getMessage, name="getMessage"),
 ]

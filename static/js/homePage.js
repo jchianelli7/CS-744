@@ -20,8 +20,6 @@
     }
 }()
 
-// TODO: randomize inactive nodes
-
 this.getNodes()
 
 $('#logout').on('click', function () {
@@ -68,8 +66,10 @@ if (safety < 500) {
     // Do nothing
 }
 
+var path = []
 
-setInterval(this.generateRandomCall, 1000); // Randomly activates node
+
+setInterval(this.generateRandomCall, 60000); // Randomly activates node
 
 /* Globals End */
 
@@ -77,11 +77,27 @@ setInterval(this.generateRandomCall, 1000); // Randomly activates node
 document.querySelector('#btn_node').addEventListener('click', e => {
     var e = document.getElementById("add_pattern_dropdown");
     var pattern = e.options[e.selectedIndex].value;
-    if (patterns[pattern].nodes.length == 0) {
-        // 0 is non-connector, 1 is connector
-        this.addNode(1, pattern);
+
+    if (this.forceLayout.nodes().length == 0)
+        this.addNode(1, pattern, -1) // very first node
+    else if (patterns[pattern].nodes.length == 0) {
+        // New Connector Node, prompt modal
+        var connectorNodes = []
+        this.forceLayout.nodes().forEach(function (node) {
+            if (node.type == 1) connectorNodes.push(node)
+        })
+        if (connectorNodes.length > 0) {
+            // Link new pattern to modal selected pattern
+            $('#modal_text').text('Add new connector to what pattern?')
+            $('#modalButton').click()
+            return;
+        }
+    } else if (patterns[pattern].nodes.length == 7) {
+        $('#modal_text').text('Error: Pattern cannot contain more than 7 nodes. Create new pattern linked to which existing pattern?')
+        $('#modalButton').click()
+        return;
     } else {
-        this.addNode(0, pattern);
+        this.addNode(0, pattern, -1);
     }
 });
 
@@ -107,11 +123,103 @@ document.querySelector('#btn_node_active').addEventListener('click', e => {
     this.activateNode(id);
 });
 
+document.querySelector('#modal_btn_node').addEventListener('click', e => {
+    var e = document.getElementById("modal_pattern_dropdown");
+    var linkPattern = e.options[e.selectedIndex].value;
+    var f = document.getElementById("add_pattern_dropdown");
+    var pattern = f.options[f.selectedIndex].value;
+    var linkPatternID = -1
+
+    if (patterns[pattern].nodes.length == 7) {
+        // pattern is new pattern
+        pattern = this._nextPatternID()
+    } // Otherwise use intended pattern
+
+    this.forceLayout.nodes().forEach(function (node) {
+        if (convertPatternToInt(node.pattern) == linkPattern) {
+            if (node.type == 1) linkPatternID = node.id
+        }
+    })
+    if (linkPatternID != -1)
+        this.addNode(1, pattern, linkPatternID);
+    else
+        $(this).trigger(M.toast({html: 'Error: unable to add new pattern to specified link.'}));
+});
+
+$('#send').on('click', function () {
+    let text = $('#input_text').val()
+    let textLen = $('#input_text').val().length;
+    if (textLen > 50) {
+        $('#send').trigger(M.toast({html: 'The length of the text should below 50.'}))
+    } else if (textLen < 1) {
+        $('#send').trigger(M.toast({html: 'Please enter your message.'}))
+    } else {
+        // Send message, get shortest path
+        // Gets source, target, and distance
+        var e = document.getElementById("text_source_dropdown");
+        var f = document.getElementById("text_target_dropdown");
+        var id1 = e.options[e.selectedIndex].value;
+        var id2 = f.options[f.selectedIndex].value;
+
+        var paths = setPath()
+        var sp = new ShortestPathCalculator(forceLayout.nodes(), paths);
+        var route = sp.findRoute(find(id1), find(id2));
+
+        // Formats result of path
+        var translatedRoute = []
+        translatedRoute["source"] = nodesIndexToID(route.source)
+        translatedRoute["target"] = nodesIndexToID(route.target)
+        translatedRoute["msg"] = route.mesg
+        translatedRoute["distance"] = route.distance
+        translatedRoute["paths"] = []
+        if (route.path == null) {
+            $(this).trigger(M.toast({html: 'Error: Unable to find a path.'}));
+            console.log('no path found')
+        } else {
+            route.path.forEach(function (p) {
+                const path = {
+                    source: nodesIndexToID(p.source),
+                    target: nodesIndexToID(p.target)
+                }
+                translatedRoute.paths.push(path)
+            })
+            drawPath(translatedRoute.paths)
+            setTimeout(clearPath, 10000)
+        }
+
+        let data = {
+            'message': text,
+            'id': id2
+        }
+
+        $.ajax({
+            url: "/homepage/addMessage/", // the endpoint
+            type: "POST", // http method
+            data: JSON.stringify(data),
+
+            // handle a successful response
+            success: function (response) {
+                console.log("Message sent"); // another sanity check
+
+            },
+
+            // handle a non-successful response
+            error: function (xhr, errmsg, err) {
+                $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: " + errmsg +
+                    " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+                console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+            }
+        });
+    }
+})
 
 /* Button Event End */
 
-function addNode(type, pattern) {
-    if (patterns[pattern].nodes.length == 7) $(this).trigger(M.toast({html: 'Error: Pattern cannot contain more than 7 nodes'})); //no more than 7 nodes
+function addNode(type, pattern, linkPattern) {
+    if (patterns[pattern].nodes.length == 7) {
+        // Should never display
+        $(this).trigger(M.toast({html: 'Error: Pattern cannot contain more than 7 nodes'})); //no more than 7 nodes
+    }
 
     let id = this._nextID()
     let number = 'N' + ("0" + id).slice(-2);
@@ -129,23 +237,17 @@ function addNode(type, pattern) {
     patterns[pattern].nodes.push(node);
     this.forceLayout.nodes().push(node);
 
+    if (patterns[pattern].nodes.length == 1) {
+        // Connect it with another connector
+        if (linkPattern != -1) {
+            // Link new pattern to random existing pattern
+            this.addLink(patterns[pattern].nodes[0].id, linkPattern)
+        }
+    }
+
     let nodes = patterns[pattern].nodes; //Nodes in current pattern
     let links = this.forceLayout.links()
     let size = nodes.length; //Length of current pattern nodes
-
-    if (patterns[pattern].nodes.length == 1) {
-        // Connect it with another connector
-        var connectorNodes = []
-        this.forceLayout.nodes().forEach(function (node) {
-            if (node.type == 1 && node.id != id) connectorNodes.push(node)
-        })
-        console.log(connectorNodes)
-        if (connectorNodes.length > 0) {
-            // Link new pattern to random existing pattern
-            let randID = connectorNodes[Math.floor(Math.random() * connectorNodes.length)].id;
-            this.addLink(patterns[pattern].nodes[0].id, randID)
-        }
-    }
 
     let connectorID = patterns[pattern].nodes[0].id
     patterns[pattern].nodes.forEach(function (node) {
@@ -183,7 +285,7 @@ function addNode(type, pattern) {
             })
             if (linkCount.length == 2) nodesWith2Links.push(node)
         })
-        console.log(nodesWith2Links)
+
         if (nodesWith2Links.length != 2) {
             //remove links between last node added, and first nonconnector node
             // will always work because prior, everything connected to everything
@@ -210,7 +312,6 @@ function addNode(type, pattern) {
             })
             if (linkCount.length == 2) nodesWith2Links.push(node)
         })
-        console.log(nodesWith2Links)
 
         //get neighbor of node w 2 links
         var neighbor = []
@@ -221,7 +322,6 @@ function addNode(type, pattern) {
                 neighbor.push(e.source.id)
             }
         })
-        console.log(neighbor)
 
         this.removeLinkBetween(nodesWith2Links[0].id, neighbor[0]);
         //close loop with new node and first non nonconnector connector
@@ -250,6 +350,8 @@ function addNode(type, pattern) {
         success: function (response) {
             // console.log(JSON.parse(response)) // log the returned json to the console
             console.log("success"); // another sanity check
+            var modal = document.getElementById('myModal');
+            modal.style.display = "none";
             _redraw()
         },
 
@@ -356,11 +458,10 @@ function activateNode(id) {
 }
 
 function generateRandomCall() {
-    var rounded = Math.round(Math.random() * 10 ) / 10;
+    var rounded = Math.round(Math.random() * 10) / 10;
     randomCounter += rounded
-    console.log(randomCounter)
-    if(randomCounter > 4.7 && randomCounter < 5.0) this.randomInactiveNodes()
-    if(randomCounter > 5.0) randomCounter = 0
+    if (randomCounter > 4.7 && randomCounter < 5.0) this.randomInactiveNodes()
+    if (randomCounter > 5.0) randomCounter = 0
 }
 
 function randomInactiveNodes() {
@@ -480,7 +581,6 @@ function _verifyNewLink(source, target) {
 
 function removeLinkBetween(id1, id2) {
     let links = this.forceLayout.links();
-    console.log('removing links between' + id1 + ' and ' + id2)
     let i = 0;
     while (i < links.length) {
         if ((links[i].source.id == id1 && links[i].target.id == id2) ||
@@ -501,8 +601,6 @@ function removeLinkBetween(id1, id2) {
 
 // Use only in delete!!!
 function moveConnectorTo(pattern, s, t) {
-    console.log('moving connector from ' + s + ' to ' + t)
-
     let nodes = this.forceLayout.nodes();
     let links = this.forceLayout.links();
 
@@ -513,18 +611,12 @@ function moveConnectorTo(pattern, s, t) {
         if (node.type == 1) connectorID = node.id
     })
 
-    console.log(patterns[pattern])
-    console.log(connectorID)
-    console.log(s)
-    console.log(links)
     if (!this._findLink(connectorID, s)) {
         console.log('source is not linked with connector');
         return
     }
 
     //Remove old link from connector to source
-    // this.removeLinkBetween(s, connectorID);
-    console.log('removing links between' + s + ' and ' + connectorID)
     let i = 0;
     while (i < links.length) {
         if ((links[i].source.id == s && links[i].target.id == connectorID) ||
@@ -534,18 +626,6 @@ function moveConnectorTo(pattern, s, t) {
         else
             i++;
     }
-
-    // If pattern node size is 5, need to also remove link from new id and node to be deleted
-    // console.log('removing links between' + s + ' and ' + t)
-    // i = 0;
-    // while (i < links.length) {
-    //     if ((links[i].source.id == s && links[i].target.id == t) ||
-    //         (links[i].source.id == t && links[i].target.id == s)) {
-    //         this.forceLayout.links().splice(i, 1);
-    //     }
-    //     else
-    //         i++;
-    // }
 
     //Check and add new link
     if (this._verifyNewLink(t, connectorID)) {
@@ -571,13 +651,11 @@ function moveConnectorTo(pattern, s, t) {
     linksUpdated.exit().remove();
     this.forceLayout.start();
 
-    console.log(this.forceLayout.links())
     // update database with new links
     let data = {
         'link': []
     }
     data.link = this.forceLayout.links()
-    console.log(data)
     $.ajax({
         url: "/homepage/addNode/", // the endpoint
         type: "POST", // http method
@@ -820,6 +898,7 @@ function draw(nodes, links) {
 function _updateNodes() {
     const nodes = this.forceLayout.nodes()
     const sel = this.vis.select('.nodeContainer').selectAll('.node');
+
     const binding = sel.data(nodes, function (d) {
         return d.id
     }); //key that defines each item in the array. https://stackoverflow.com/questions/44891369/how-to-remove-node-in-d3-force-layout
@@ -829,7 +908,8 @@ function _updateNodes() {
             const node = d3.select(this);
             // if(d.type == 1) node.classed("fixed", d.fixed = true);
             node.append('circle').attr('r', 0)
-                .style('fill', d => d.type == 1 ? "blue" : (d.status == true ? "white" : "red"))
+            //.style('fill', d => d.type == 1 ? "blue" : (d.status == true ? "white" : "red"))
+                .style('fill', d => d.status == true ? (d.type == 1 ? "blue" : "white") : "red")
                 .transition().duration(750).ease('elastic')
                 .attr('r', 20);
             node.append('text')
@@ -842,7 +922,8 @@ function _updateNodes() {
                 .attr('font-size', 8)
                 .attr('fill', 'black')
                 .attr('dx', 25)
-                .attr('dy', 4)
+                .attr('dy', 4);
+            node.on("click", clickNode);
         });
     }).call(this.forceLayout.drag);
 
@@ -857,8 +938,30 @@ function _updateNodes() {
 function _updateLinks() {
     const layout_links = this.forceLayout.links()
     const links = this.vis.select('.linkContainer').selectAll(".link").data(layout_links);
-    links.enter().insert('line').attr('class', 'link').style('stroke', 'white').style('stroke-width', 5)
+    links.enter().insert('line').attr("class", 'link').style('stroke', 'white').style('stroke-width', 5)
+        .attr('id', d => d.source.id + "," + d.target.id)
         .attr('x1', d => d.source.x).attr('y1', d => d.source.y).attr('x2', d => d.target.x).attr('y2', d => d.target.y);
+
+    links.transition().attr("class", 'link').style('stroke', function (d) {
+        var isPath = false
+        var path = getPath()
+        if (typeof path !== 'undefined' && path.length > 0) {
+            // Draw the path
+            path.forEach(function (p) {
+                if ((d.source.id == p.source && d.target.id == p.target) || (d.source.id == p.target && d.target.id == p.source)) {
+                    isPath = true
+                }
+            })
+            return isPath ? "blue" : "white"
+        } else {
+            // No path to draw
+            return "white"
+        }
+    })
+        // .style('stroke-width', 5)
+        // .attr('id', d => d.source.id + "," + d.target.id)
+        // .attr('x1', d => d.source.x).attr('y1', d => d.source.y).attr('x2', d => d.target.x).attr('y2', d => d.target.y);
+
 
     links.exit().remove();
 
@@ -912,6 +1015,15 @@ function find(f) {
     return i;
 }
 
+function nodesIndexToID(ind) {
+    var id = -1
+    this.forceLayout.nodes().forEach(function (node, index) {
+        if (index == ind)
+            id = node.id
+    });
+    return id;
+}
+
 function updateDropDown(nodes, link) {
     // Add Node
     var select = document.getElementById("add_pattern_dropdown");
@@ -954,12 +1066,10 @@ function updateDropDown(nodes, link) {
     var select = document.getElementById("activate_dropdown");
     $('#activate_dropdown').empty()
     nodes.forEach(function (name, value) {
-        if (name.type == 0) {
-            var option = document.createElement('option');
-            option.text = name.number;
-            option.value = name.id
-            select.add(option, 0);
-        }
+        var option = document.createElement('option');
+        option.text = name.number;
+        option.value = name.id
+        select.add(option, 0);
     })
 
     // Links
@@ -980,5 +1090,114 @@ function updateDropDown(nodes, link) {
         option.value = name.id
         selectTarget.add(option, 0);
     })
+
+    // Add Node
+    var select = document.getElementById("modal_pattern_dropdown");
+    $('#modal_pattern_dropdown').empty()
+    nodes.forEach(function (name, value) {
+        if (name.type == 1) {
+            var option = document.createElement('option');
+            option.text = name.pattern;
+            option.value = convertPatternToInt(name.pattern)
+            select.add(option, 0);
+        }
+    })
+
+    // Send Message
+    $('#text_source_dropdown').empty()
+    $('#text_target_dropdown').empty()
+
+    var textSource = document.getElementById("text_source_dropdown");
+    nodes.forEach(function (name, value) {
+        var option = document.createElement('option');
+        option.text = name.number;
+        option.value = name.id
+        textSource.add(option, 1);
+    })
+
+    var textTarget = document.getElementById("text_target_dropdown");
+    nodes.forEach(function (name, value) {
+        var option = document.createElement('option');
+        option.text = name.number;
+        option.value = name.id
+        textTarget.add(option, 0);
+    })
+
     $('select').formSelect();
 }
+
+function setPath() {
+    var paths = []
+    var links = this.forceLayout.links()
+    var nodes = this.forceLayout.nodes()
+    links.forEach(function (link) {
+        var s = link.source
+        var t = link.target
+        if (s.status == true && t.status == true) { // Only active nodes
+            let dist = Math.sqrt(Math.pow((s.x - t.x), 2) + Math.pow((s.y - t.y), 2));
+            const path = {
+                source: s.id,
+                target: t.id,
+                distance: Math.round(dist),
+            };
+            paths.push(path);
+        }
+    })
+    return paths
+}
+
+function drawPath(path) {
+    this.path = path
+    this._redraw()
+}
+
+function getPath() {
+    return this.path
+}
+
+function clearPath() {
+    this.path = []
+    this._redraw()
+}
+
+function clickNode(d) {
+    $('#message_modal_id').text("ID: " + d.id)
+    $('#message_modal_pattern').text("Pattern: " + d.pattern)
+    $('#message_modal_status').text("Status: " + (d.status == "true" ? "Active" : "Inactive"))
+    $('#messages_list').empty()
+
+    let data = {
+        'id': d.id
+    }
+
+    $.ajax({
+        url: "/homepage/getMessage/", // the endpoint
+        type: "POST", // http method
+        data: JSON.stringify(data),
+
+        // handle a successful response
+        success: function (response) {
+            var resp = JSON.parse(response)
+            if (resp.message.length == 0) {
+                $(this).trigger(M.toast({html: 'Alert: Node contains no messages.'}))
+            } else {
+                var items = [];
+                $.each(resp.message, function (i, item) {
+                    items.push('<li>' + (i + 1) + " : " + item.message + '</li>');
+                });
+                $('#messages_list').append(items.join(''));
+            }
+        },
+
+        // handle a non-successful response
+        error: function (xhr, errmsg, err) {
+            // console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+            $(this).trigger(M.toast({html: xhr.responseJSON.message}))
+        }
+    });
+
+    // Show the modal
+    $('#messageModalButton').click()
+}
+
+
