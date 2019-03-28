@@ -153,22 +153,11 @@ def inactiveNode(request):
         response = redirect('/homepage/logout/')
     else:
         try:
-            # node = Node.objects.filter(id=random.randint(1, Node.objects.count()))[0] #ID might not be within count
-            # if (random.randint(0, 2) == 1 and node.status == True):
-            #     if (random.randint(0, 2) == 1 and node.status == True):
-            #         node.status = False
-            #         node.save()
-            #     else:
-            #         raise Node.nodeError
-
-            # for i in Node.objects.all():
-            #     i.status = True
-            #     i.save()
-
-            nonconnectors = [x for x in Node.objects.all() if (x.type == 0 and x.status == True)]
-            node = random.choice(nonconnectors)
-            node.status = False
-            node.save()
+            inactiveNodes = [x for x in Node.objects.all() if (x.status == True)]
+            if (len(inactiveNodes) >= 1):
+                node = random.choice(inactiveNodes)
+                node.status = False
+                node.save()
 
             nodeList = []
             for i in Node.objects.all():
@@ -236,3 +225,33 @@ def bad_request(message):
                             content_type='application/json')
     response.status_code = 400
     return response
+
+
+def addMessage(request):
+    if (request.COOKIES.get('username') == None or request.COOKIES.get('is_superuser') == None):
+        response = redirect('/homepage/logout/')
+    else:
+        request = simplejson.loads(request.body)
+        Message.objects.create(message=request['message'], nodeId_id=request['id']).save()
+        response = HttpResponse()
+    return response
+
+
+def getMessage(request):
+    if (request.COOKIES.get('username') == None or request.COOKIES.get('is_superuser') == None):
+        response = redirect('/homepage/logout/')
+    else:
+        try:
+            request = simplejson.loads(request.body)
+            messages = []
+            for i in Message.objects.filter(nodeId_id=request['id']):
+                mesg = {'id': str(i.nodeId), 'message': str(i.message)}
+                messages.append(mesg)
+
+            type(messages)
+
+        except IndexError:
+            return bad_request(message='Error: Count not retrieve messages')
+
+        response = HttpResponse(json.dumps({'message': messages}))
+        return response

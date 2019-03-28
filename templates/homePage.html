@@ -27,11 +27,19 @@
             border: 0;
             margin: 0;
         }
+
+        .tab {
+            margin-left: 40px;
+        }
+
+
     </style>
 </head>
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 <link href="../../static/css/materialize.css" rel="stylesheet">
 <link href="../../static/css/homePageSideNav.css" rel="stylesheet">
+<link href="../../static/css/modal.css" rel="stylesheet">
+
 <body>
 <!--sidenav start here-->
 <nav style="position: relative" class="z-depth-5">
@@ -110,27 +118,6 @@
                         </li>
                     </ul>
                 </li>
-
-                {#                <li>#}
-                {#                    <div class="divider z-depth-5" style="margin-top: 15px"></div>#}
-                {#                </li>#}
-                {#                <li>#}
-                {#                    <ul style="margin-top: 10px">#}
-                {#                        <li>#}
-                {#                            Link Between Nodes#}
-                {#                        </li>#}
-                {#                        <li>#}
-                {#                            <div class="input-field" style="width: 150px;margin:1px 0 0 1px;">#}
-                {#                                <select id="delete_link">#}
-                {#                                    <option value="" disabled selected>Exsiting Link</option>#}
-                {#                                </select>#}
-                {#                            </div>#}
-                {#                        </li>#}
-                {#                        <li>#}
-                {#                            <a class="waves-effect waves-light btn-small" style="margin: 6px 0 0 30px;">Delete</a>#}
-                {#                        </li>#}
-                {#                    </ul>#}
-                {#                </li>#}
             </ul>
         </div>
 
@@ -160,17 +147,123 @@
     <div id="canvas"></div>
 </div>
 
+<!--text area-->
+<div class="textArea">
+    <h6 style="position: absolute;margin: 33px 0 0 10px;">
+        Send message from
+    </h6>
+    <div style="width: 90px;position: absolute; margin: 20px 0 0 180px;">
+        <select id="text_source_dropdown">
+            <option value="" disabled selected>From</option>
+        </select>
+    </div>
+    <h6 style="position: absolute;margin: 33px 0 0 280px;">
+        to
+    </h6>
+    <div style="width: 90px; position: absolute; margin: 20px 0 0 310px;">
+        <select id="text_target_dropdown">
+            <option value="" disabled selected>To</option>
+        </select>
+    </div>
+    <div>
+        <a id="send" class="waves-effect waves-light btn"
+           style="width: 90px; position: absolute; margin: 24px 0 0 660px;">Send</a>
+    </div>
+    <div class="input-field col s6" style="width: 600px;margin: 100px 0 0 150px;">
+        <input id="input_text" type="text" data-length="50">
+        <label for="input_text">Input text</label>
+    </div>
+</div>
+<!-- Trigger/Open The Modal -->
+<button id="modalButton" style="display: none"></button>
+<button id="messageModalButton" style="display: none"></button>
+
+<!-- The Modal -->
+<div id="myModal" class="modal">
+    <!-- Modal content -->
+    <div class="modal-content">
+        <span class="close_modal">&times;</span>
+        <h5 id="modal_text"></h5>
+        <div class="input-field" style="width: 150px;margin:1px 0 0 1px;">
+            <select id="modal_pattern_dropdown"></select>
+        </div>
+        <a id="modal_btn_node" class="waves-effect waves-light btn-small" style="margin: 6px 0 0 30px;">Add
+            Node</a>
+    </div>
+</div>
+
+<!-- The Message Modal -->
+<div id="messageModal" class="modal">
+    <!-- Modal content -->
+    <div class="modal-content">
+        <span class="close_modal_message">&times;</span>
+        <div class="row">
+            <h5 id="message_modal_id" style="display: inline;"></h5>
+            <h5 id="message_modal_pattern" class="tab" style="display: inline;"></h5>
+            <h5 id="message_modal_status" class="tab" style="display: inline;"></h5>
+            <h5>Messages:</h5>
+            <ul id="messages_list"></ul>
+
+        </div>
+    </div>
+</div>
+
 </body>
 <script src="../../static/js/jquery-3.3.1.js"></script>
 <script src="../../static/js/materialize.min.js"></script>
 <script src='//cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.js'></script>
 <script src="../../static/js/homePage.js"></script>
+<script src="../../static/js/ShortestPathCalculator.js"></script>
+<script src="../../static/js/ShortestPathUtils.js"></script>
+
 
 <script>
     $(document).ready(function () {
         $('.collapsible').collapsible();
         $('.dropdown-trigger').dropdown();
         $('select').formSelect();
+        $('input#input_text, textarea#textarea2').characterCounter();
     });
+
+    // Get the modal
+    var modal = document.getElementById('myModal');
+    var messageModal = document.getElementById('messageModal');
+
+    // Get the button that opens the modal
+    var btn = document.getElementById("modalButton");
+    var messageBtn = document.getElementById("messageModalButton");
+
+    // Get the <span> element that closes the modal
+    var span = document.getElementsByClassName("close_modal")[0];
+    var spanMessage = document.getElementsByClassName("close_modal_message")[0];
+
+
+    // When the user clicks on the button, open the modal
+    btn.onclick = function () {
+        modal.style.display = "block";
+    }
+    messageBtn.onclick = function () {
+        messageModal.style.display = "block";
+    }
+
+    // When the user clicks on <span> (x), close the modal
+    span.onclick = function () {
+        modal.style.display = "none";
+    }
+    spanMessage.onclick = function () {
+        messageModal.style.display = "none"
+    }
+
+    // When the user clicks anywhere outside of the modal, close it
+    window.onclick = function (event) {
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+        if (event.target == messageModal) {
+            messageModal.style.display = "none"
+        }
+    }
+
+
 </script>
 </html>
