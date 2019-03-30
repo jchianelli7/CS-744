@@ -958,9 +958,9 @@ function _updateLinks() {
             return "white"
         }
     })
-        // .style('stroke-width', 5)
-        // .attr('id', d => d.source.id + "," + d.target.id)
-        // .attr('x1', d => d.source.x).attr('y1', d => d.source.y).attr('x2', d => d.target.x).attr('y2', d => d.target.y);
+    // .style('stroke-width', 5)
+    // .attr('id', d => d.source.id + "," + d.target.id)
+    // .attr('x1', d => d.source.x).attr('y1', d => d.source.y).attr('x2', d => d.target.x).attr('y2', d => d.target.y);
 
 
     links.exit().remove();
@@ -1161,9 +1161,11 @@ function clearPath() {
 }
 
 function clickNode(d) {
+    console.log(d);
     $('#message_modal_id').text("ID: " + d.id)
     $('#message_modal_pattern').text("Pattern: " + d.pattern)
-    $('#message_modal_status').text("Status: " + (d.status == "true" ? "Active" : "Inactive"))
+    $('#message_modal_status').text("Status: " + (d.status == true ? "Active" : "Inactive"))
+    $('#message_modal_type').text("Type: " + (d.type == 0 ? "Non-connector" : "Connector"))
     $('#messages_list').empty()
 
     let data = {
