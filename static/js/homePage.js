@@ -506,7 +506,8 @@ function updateStatus(newNodes) {
     sel.each(function (d) {
         const node = d3.select(this);
         node.append('circle').attr('r', 0)
-            .style('fill', d => d.type == 1 ? "blue" : (d.status == true ? "white" : "red"))
+        // .style('fill', d => d.type == 1 ? "blue" : (d.status == true ? "white" : "red"))
+            .style('fill', d => d.status == true ? (d.type == 1 ? "blue" : "white") : "red")
             .transition().duration(750).ease('elastic')
             .attr('r', 20);
         node.append('text')
