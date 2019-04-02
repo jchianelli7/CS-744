@@ -250,10 +250,13 @@ function addNode(type, pattern, linkPattern) {
     };
     console.log(node)
 
-    patterns[pattern].nodes.push(node);
+    if (type != 2) {
+        // Dont push domain node to pattern node tracker
+        patterns[pattern].nodes.push(node);
+    }
     this.forceLayout.nodes().push(node);
 
-    console.log(domains)
+    // If connector node, link with domain node
     if (type == 1) {
         if (domains[1].patterns.length == 0) { // TODO: change later
             var domainId = this.addDomain()
@@ -261,6 +264,7 @@ function addNode(type, pattern, linkPattern) {
             domains[1].patterns.push(node.id)
             this.addLink(id, domainId)
         } else {
+            domains[1].patterns.push(node.id)// TODO: change later
             this.addLink(id, domains[1].id) // TODO: change later
         }
     }
@@ -304,12 +308,15 @@ function addNode(type, pattern, linkPattern) {
         nodes.forEach(function (node) {
             var linkCount = [];
             links.forEach(function (e) {
-                if (e.source.id == node.id && !linkCount.includes(e.target.id)) {
-                    linkCount.push(e.target.id)
-                } else if (e.target.id == node.id && !linkCount.includes(e.source.id)) {
-                    linkCount.push(e.source.id)
+                if (e.source.type == 2 || e.target.type == 2) {
+                    // Do nothing. Domain link
+                } else {
+                    if (e.source.id == node.id && !linkCount.includes(e.target.id)) {
+                        linkCount.push(e.target.id)
+                    } else if (e.target.id == node.id && !linkCount.includes(e.source.id)) {
+                        linkCount.push(e.source.id)
+                    }
                 }
-
             })
             if (linkCount.length == 2) nodesWith2Links.push(node)
         })
@@ -331,23 +338,32 @@ function addNode(type, pattern, linkPattern) {
         nodes.forEach(function (node) {
             var linkCount = [];
             links.forEach(function (e) {
-                if (e.source.id == node.id && !linkCount.includes(e.target.id)) {
-                    linkCount.push(e.target.id)
-                } else if (e.target.id == node.id && !linkCount.includes(e.source.id)) {
-                    linkCount.push(e.source.id)
+                if (e.source.type == 2 || e.target.type == 2) {
+                    // Do nothing. Domain link
+                } else {
+                    if (e.source.id == node.id && !linkCount.includes(e.target.id)) {
+                        linkCount.push(e.target.id)
+                    } else if (e.target.id == node.id && !linkCount.includes(e.source.id)) {
+                        linkCount.push(e.source.id)
+                    }
                 }
-
             })
             if (linkCount.length == 2) nodesWith2Links.push(node)
         })
 
+        console.log(nodesWith2Links)
+
         //get neighbor of node w 2 links
         var neighbor = []
         links.forEach(function (e) {
-            if (e.source.id == nodesWith2Links[0].id && !neighbor.includes(e.target.id)) {
-                neighbor.push(e.target.id)
-            } else if (e.target.id == nodesWith2Links[0].id && !neighbor.includes(e.source.id)) {
-                neighbor.push(e.source.id)
+            if (e.source.type == 2 || e.target.type == 2) {
+                // Do nothing. Domain link
+            } else {
+                if (e.source.id == nodesWith2Links[0].id && !neighbor.includes(e.target.id)) {
+                    neighbor.push(e.target.id)
+                } else if (e.target.id == nodesWith2Links[0].id && !neighbor.includes(e.source.id)) {
+                    neighbor.push(e.source.id)
+                }
             }
         })
 
@@ -397,7 +413,7 @@ function addDomain() {
         number: number,
         type: 2,
         status: true,
-        // pattern: convertPatternToString(pattern),
+        //pattern: convertPatternToString(pattern),
         x: Math.random(),
         y: Math.random()
     };
@@ -442,24 +458,38 @@ function getNodes() {
             let nodelist = []
 
             json.node.forEach(function (e) {
-                if (e.type == 1) {
-                    domains[1].id = 2 // TODO: FIX
-                    domains[1].patterns.push(e.id) // TODO: change later
+                console.log(e)
+                // Seperate domain nodes from the rest
+                if (e.type == 2) {
+                    // Dealing with domain nodes only
+                    domains[1].id = e.id // TODO: change later
+                    const node = {
+                        id: e.id,
+                        number: e.number,
+                        type: e.type,
+                        status: e.status,
+                    };
+                    nodelist.push(node)
+                } else {
+                    // Dealing with all other nodes
+                    if (e.type == 1) {
+                        domains[1].patterns.push(e.id) // TODO: change later
+                    }
+                    let numNodes = 7, i = 0, currentPattern = 1
+                    if (convertPatternToInt(e.pattern) != currentPattern) {
+                        i = 0
+                        currentPattern = convertPatternToInt(e.pattern)
+                    }
+                    const node = {
+                        id: e.id,
+                        number: e.number,
+                        type: e.type,
+                        status: e.status,
+                        pattern: e.pattern,
+                        domain: 1 //TODO: Change later
+                    };
+                    nodelist.push(node)
                 }
-                let numNodes = 7, i = 0, currentPattern = 1
-                if (convertPatternToInt(e.pattern) != currentPattern) {
-                    i = 0
-                    currentPattern = convertPatternToInt(e.pattern)
-                }
-                const node = {
-                    id: e.id,
-                    number: e.number,
-                    type: e.type,
-                    status: e.status,
-                    pattern: e.pattern,
-                    domain: 1 //TODO: Change later
-                };
-                nodelist.push(node)
             });
             draw(nodelist, json.link)
         },
@@ -937,8 +967,10 @@ function draw(nodes, links) {
     this.forceLayout.links().length = 0
     nodes.forEach(function (e) {
         this.forceLayout.nodes().push(e)
-        let pattern = convertPatternToInt(e.pattern)
-        patterns[pattern].nodes.push(e)
+        if (e.type != 2) {
+            let pattern = convertPatternToInt(e.pattern)
+            patterns[pattern].nodes.push(e)
+        }
     });
     links.forEach(function (e) {
         let source = find(e.source.id)

@@ -18,7 +18,7 @@ class Node(models.Model):
 
     def save(self, *args, **kwargs):
         if (Node.objects.filter(id=self.id).exists() == False):
-            if (Node.objects.filter(pattern=self.pattern).count() == 7):
+            if (Node.objects.filter(pattern=self.pattern and self.type != 2).count() == 7):
                 raise Node.nodeNumberError('7 node have been existed in pattern')
 
             elif (Node.objects.filter(pattern=self.pattern).count() == 0 and self.type == 0):
