@@ -28,6 +28,13 @@ $('#logout').on('click', function () {
 /* End Functions */
 
 /* Globals start */
+var domains = []
+for (var i = 0; i < 99; i++) { //max 99 patterns
+    var domain = {};
+    domain['id'] = -1;
+    domain['patterns'] = [];
+    domains.push(domain);
+}
 var patterns = [];
 for (var i = 0; i < 99; i++) { //max 99 patterns
     var pattern = {};
@@ -66,10 +73,16 @@ if (safety < 500) {
     // Do nothing
 }
 
+// Array for the path if requested
 var path = []
 
-
-setInterval(this.generateRandomCall, 60000); // Randomly activates node
+// Groups
+// var hull = this.vis.append("path")
+//     .attr("class", "hull");
+// var nodeSaver = this.vis.select('.nodeContainer').selectAll('.node');
+// var vertices = []
+//
+// setInterval(this.generateRandomCall, 60000); // Randomly activates node
 
 /* Globals End */
 
@@ -78,9 +91,10 @@ document.querySelector('#btn_node').addEventListener('click', e => {
     var e = document.getElementById("add_pattern_dropdown");
     var pattern = e.options[e.selectedIndex].value;
 
-    if (this.forceLayout.nodes().length == 0)
+    if (this.forceLayout.nodes().length == 0) {
+        // Need to add domain node
         this.addNode(1, pattern, -1) // very first node
-    else if (patterns[pattern].nodes.length == 0) {
+    } else if (patterns[pattern].nodes.length == 0) {
         // New Connector Node, prompt modal
         var connectorNodes = []
         this.forceLayout.nodes().forEach(function (node) {
@@ -136,7 +150,7 @@ document.querySelector('#modal_btn_node').addEventListener('click', e => {
     } // Otherwise use intended pattern
 
     this.forceLayout.nodes().forEach(function (node) {
-        if (convertPatternToInt(node.pattern) == linkPattern) {
+        if (node.type != 2 && convertPatternToInt(node.pattern) == linkPattern) {
             if (node.type == 1) linkPatternID = node.id
         }
     })
@@ -230,17 +244,31 @@ function addNode(type, pattern, linkPattern) {
         type: type,
         status: true,
         pattern: convertPatternToString(pattern),
+        domain: 1, //TODO: change later
         x: Math.random(),
         y: Math.random()
     };
+    console.log(node)
 
     patterns[pattern].nodes.push(node);
     this.forceLayout.nodes().push(node);
 
+    console.log(domains)
+    if (type == 1) {
+        if (domains[1].patterns.length == 0) { // TODO: change later
+            var domainId = this.addDomain()
+            domains[1].id = domainId // TODO: change later
+            domains[1].patterns.push(node.id)
+            this.addLink(id, domainId)
+        } else {
+            this.addLink(id, domains[1].id) // TODO: change later
+        }
+    }
+
     if (patterns[pattern].nodes.length == 1) {
         // Connect it with another connector
         if (linkPattern != -1) {
-            // Link new pattern to random existing pattern
+            // Link new pattern to selected existing pattern
             this.addLink(patterns[pattern].nodes[0].id, linkPattern)
         }
     }
@@ -334,12 +362,7 @@ function addNode(type, pattern, linkPattern) {
     }
     data.link = this.forceLayout.links()
     if (patterns[pattern].nodes.length == 1) {
-        // TODO: This could be a problem, but you cant just create one
-        // Adding a new connector node
-        // data.link.push({
-        //     'source': {'id': id, 'number': number, 'pattern': convertPatternToString(pattern), 'type': 1},
-        //     'target': {'id': id, 'number': number, 'pattern': convertPatternToString(pattern), 'type': 1}
-        // })
+        // Do nothing
     }
     $.ajax({
         url: "/homepage/addNode/", // the endpoint
@@ -352,6 +375,7 @@ function addNode(type, pattern, linkPattern) {
             console.log("success"); // another sanity check
             var modal = document.getElementById('myModal');
             modal.style.display = "none";
+            console.log(response)
             _redraw()
         },
 
@@ -362,6 +386,23 @@ function addNode(type, pattern, linkPattern) {
             console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
         }
     });
+}
+
+function addDomain() {
+    let id = this._nextID()
+    let number = 'D' + ("0" + this._nextDomainID()).slice(-2);
+
+    const domain = {
+        id: id,
+        number: number,
+        type: 2,
+        status: true,
+        // pattern: convertPatternToString(pattern),
+        x: Math.random(),
+        y: Math.random()
+    };
+    this.forceLayout.nodes().push(domain);
+    return id
 }
 
 function addLink(s, l) {
@@ -401,6 +442,10 @@ function getNodes() {
             let nodelist = []
 
             json.node.forEach(function (e) {
+                if (e.type == 1) {
+                    domains[1].id = 2 // TODO: FIX
+                    domains[1].patterns.push(e.id) // TODO: change later
+                }
                 let numNodes = 7, i = 0, currentPattern = 1
                 if (convertPatternToInt(e.pattern) != currentPattern) {
                     i = 0
@@ -412,6 +457,7 @@ function getNodes() {
                     type: e.type,
                     status: e.status,
                     pattern: e.pattern,
+                    domain: 1 //TODO: Change later
                 };
                 nodelist.push(node)
             });
@@ -857,10 +903,19 @@ function _tick() {
     if (safety < 500) {
         // Do nothing
     }
-    this.vis.selectAll('.node').attr('transform', d => `translate(${d.x}, ${d.y})`);
 
     this.vis.selectAll(".link").attr("x1", d => d.source.x).attr("y1", d => d.source.y)
         .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+    this.vis.selectAll('.node').attr('transform', d => `translate(${d.x}, ${d.y})`);
+
+    // nodeSaver.data().forEach(function (d, i) {
+    //     vertices[i] = [d.x, d.y];
+    // })
+    //
+    //
+    // hull.datum(d3.geom.hull(vertices)).attr("d", function (d) {
+    //     return "M" + d.join("L") + "Z";
+    // });
 }
 
 function _redraw() {
@@ -892,7 +947,7 @@ function draw(nodes, links) {
             source, target
         });
     });
-    updateDropDown(nodes, links)
+    this.updateDropDown(nodes, links)
     this._redraw()
 }
 
@@ -904,15 +959,38 @@ function _updateNodes() {
         return d.id
     }); //key that defines each item in the array. https://stackoverflow.com/questions/44891369/how-to-remove-node-in-d3-force-layout
 
-    binding.enter().insert('g').attr('class', 'node').style('z-index', 1).call(sel => {
+    nodeSaver = binding.enter().insert('g').attr('class', 'node').style('z-index', 1).call(sel => {
         sel.each(function (d) {
             const node = d3.select(this);
-            // if(d.type == 1) node.classed("fixed", d.fixed = true);
-            node.append('circle').attr('r', 0)
-            //.style('fill', d => d.type == 1 ? "blue" : (d.status == true ? "white" : "red"))
+
+            node.append("circle")
+                .attr("r", function (d) {
+                    if (d.type == 2)
+                        return 0;
+                    return 20
+                })
                 .style('fill', d => d.status == true ? (d.type == 1 ? "blue" : "white") : "red")
                 .transition().duration(750).ease('elastic')
-                .attr('r', 20);
+
+            node.append("rect")
+                .attr("width", function (d) {
+                    if (d.type != 2)
+                        return 0;
+                    return 40
+                })
+                .attr("height", function (d) {
+                    if (d.type != 2)
+                        return 0;
+                    return 40
+                })
+                .style('fill', d => d.status == true ? (d.type == 1 ? "blue" : "white") : "red")
+                .transition().duration(750).ease('elastic')
+
+
+            //node.append('circle').attr('r', 0)
+            //     .style('fill', d => d.status == true ? (d.type == 1 ? "blue" : "white") : "red")
+            //     .transition().duration(750).ease('elastic')
+            //     .attr('r', 20);
             node.append('text')
                 .text(node => node.number)
                 .attr('font-size', 8)
@@ -920,20 +998,22 @@ function _updateNodes() {
                 .attr('dy', 4)
             node.append('text')
                 .text(node => node.type == 1 ? "" + node.pattern : '')
+                //.text(node => node.type == 1 ? "" + node.pattern : node.type == 2 ? "" + node.domain : '')
                 .attr('font-size', 8)
                 .attr('fill', 'black')
                 .attr('dx', 25)
                 .attr('dy', 4);
             node.on("click", clickNode);
+
         });
     }).call(this.forceLayout.drag);
 
+    binding.exit().remove();
     binding.exit().remove();
 
     this.updateDropDown(nodes, this.forceLayout.links())
 
     this.forceLayout.start();
-
 }
 
 function _updateLinks() {
@@ -974,7 +1054,11 @@ function _findNodeByID(id) {
 }
 
 function _findPatternByID(id) {
-    return this.forceLayout.nodes().filter(d => convertPatternToInt(d.pattern) == id)[0];
+    return this.forceLayout.nodes().filter(d => d.type != 2 && convertPatternToInt(d.pattern) == id)[0];
+}
+
+function _findDomainByID(id) {
+    return this.forceLayout.nodes().filter(d => d.type == 2 && d.domain == id)[0];
 }
 
 function _findLink(source, target) {
@@ -998,12 +1082,28 @@ function _nextPatternID() {
     return id;
 }
 
+function _nextDomainID() {
+    let id = 1;
+    while (this._findDomainByID(id)) {
+        id++;
+    }
+    return id;
+}
+
 function convertPatternToString(patId) {
     return 'P' + ("0" + patId).slice(-2)
 }
 
 function convertPatternToInt(pattern) {
     return parseInt(pattern.substr(1), 10)
+}
+
+function convertDomainToString(domainID) {
+    return 'D' + ("0" + domainID).slice(-2)
+}
+
+function convertDomainToInt(domain) {
+    return parseInt(domain.substr(1), 10)
 }
 
 //find the node index
