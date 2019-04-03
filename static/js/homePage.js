@@ -32,7 +32,9 @@ var domains = []
 for (var i = 0; i < 99; i++) { //max 99 patterns
     var domain = {};
     domain['id'] = -1;
-    domain['patterns'] = [];
+    domain['number'] = ''
+    domain['patterns'] = []
+    domain['connectors'] = [];
     domains.push(domain);
 }
 var patterns = [];
@@ -91,9 +93,26 @@ document.querySelector('#btn_node').addEventListener('click', e => {
     var e = document.getElementById("add_pattern_dropdown");
     var pattern = e.options[e.selectedIndex].value;
 
+    var f = document.getElementById("add_domain_dropdown");
+    var domain = f.options[f.selectedIndex].value;
+    console.log(domains)
+    console.log(pattern)
+
     if (this.forceLayout.nodes().length == 0) {
         // Need to add domain node
-        this.addNode(1, pattern, -1) // very first node
+        this.addNode(1, pattern, -1, domain) // very first node
+    } else if (domains[domain].patterns.length == 0) {
+        // if new domain, then make sure new pattern as well
+        if (patterns[pattern].nodes.length != 0) {
+            $(this).trigger(M.toast({html: 'Error: Pattern already exists in another domain.'}));
+        } else {
+            // create new domain AND pattern by creating a new connector node
+            // the rest is handled in add node
+            this.addNode(1, pattern, -1, domain) // very first node
+        }
+    } else if (!domains[domain].patterns.includes(parseInt(pattern)) && patterns[pattern].nodes.length != 0) {
+        //domain has patterns but not the selected pattern
+        $(this).trigger(M.toast({html: 'Error: selected pattern is not inside selected domain'}));
     } else if (patterns[pattern].nodes.length == 0) {
         // New Connector Node, prompt modal
         var connectorNodes = []
@@ -111,7 +130,7 @@ document.querySelector('#btn_node').addEventListener('click', e => {
         $('#modalButton').click()
         return;
     } else {
-        this.addNode(0, pattern, -1);
+        this.addNode(0, pattern, -1, domain);
     }
 });
 
@@ -142,7 +161,10 @@ document.querySelector('#modal_btn_node').addEventListener('click', e => {
     var linkPattern = e.options[e.selectedIndex].value;
     var f = document.getElementById("add_pattern_dropdown");
     var pattern = f.options[f.selectedIndex].value;
-    var linkPatternID = -1
+    var g = document.getElementById("add_domain_dropdown");
+    var domain = g.options[g.selectedIndex].value;
+
+    var linkPatternID = -1 // This is the id of the connector node
 
     if (patterns[pattern].nodes.length == 7) {
         // pattern is new pattern
@@ -154,8 +176,16 @@ document.querySelector('#modal_btn_node').addEventListener('click', e => {
             if (node.type == 1) linkPatternID = node.id
         }
     })
-    if (linkPatternID != -1)
-        this.addNode(1, pattern, linkPatternID);
+    if (linkPatternID != -1) {
+        console.log(domains[domain])
+        console.log(linkPatternID)
+        if (domains[domain].connectors.includes(linkPatternID)) { // compare with connector node id
+            this.addNode(1, pattern, linkPatternID, domain);
+        } else {
+            $(this).trigger(M.toast({html: 'Error: unable to add new pattern to specified pattern. Not in domain.'}));
+        }
+    }
+
     else
         $(this).trigger(M.toast({html: 'Error: unable to add new pattern to specified link.'}));
 });
@@ -229,11 +259,16 @@ $('#send').on('click', function () {
 
 /* Button Event End */
 
-function addNode(type, pattern, linkPattern) {
+function addNode(type, pattern, linkPattern, domainNumber) {
     if (patterns[pattern].nodes.length == 7) {
         // Should never display
         $(this).trigger(M.toast({html: 'Error: Pattern cannot contain more than 7 nodes'})); //no more than 7 nodes
     }
+
+    // console.log(domains[domainNumber])
+    // if (!domains[domainNumber].patterns.includes(parseInt(pattern))) {
+    //     $(this).trigger(M.toast({html: 'Error: Selected pattern does not exist in domain'}));
+    // }
 
     let id = this._nextID()
     let number = 'N' + ("0" + id).slice(-2);
@@ -244,7 +279,7 @@ function addNode(type, pattern, linkPattern) {
         type: type,
         status: true,
         pattern: convertPatternToString(pattern),
-        domain: 1, //TODO: change later
+        domain: domainNumber,
         x: Math.random(),
         y: Math.random()
     };
@@ -257,15 +292,18 @@ function addNode(type, pattern, linkPattern) {
     this.forceLayout.nodes().push(node);
 
     // If connector node, link with domain node
+    console.log(domainNumber)
     if (type == 1) {
-        if (domains[1].patterns.length == 0) { // TODO: change later
+        if (domains[domainNumber].patterns.length == 0) {
             var domainId = this.addDomain()
-            domains[1].id = domainId // TODO: change later
-            domains[1].patterns.push(node.id)
+            domains[domainNumber].id = domainId
+            domains[domainNumber].patterns.push(convertPatternToInt(node.pattern))
+            domains[domainNumber].connectors.push(node.id)
             this.addLink(id, domainId)
         } else {
-            domains[1].patterns.push(node.id)// TODO: change later
-            this.addLink(id, domains[1].id) // TODO: change later
+            domains[domainNumber].patterns.push(convertPatternToInt(node.pattern))
+            domains[domainNumber].connectors.push(node.id)
+            this.addLink(id, domains[domainNumber].id)
         }
     }
 
@@ -391,7 +429,6 @@ function addNode(type, pattern, linkPattern) {
             console.log("success"); // another sanity check
             var modal = document.getElementById('myModal');
             modal.style.display = "none";
-            console.log(response)
             _redraw()
         },
 
@@ -458,11 +495,11 @@ function getNodes() {
             let nodelist = []
 
             json.node.forEach(function (e) {
-                console.log(e)
                 // Seperate domain nodes from the rest
                 if (e.type == 2) {
                     // Dealing with domain nodes only
-                    domains[1].id = e.id // TODO: change later
+                    var domainNumber = convertDomainToInt(e.number)
+                    domains[domainNumber].id = e.id
                     const node = {
                         id: e.id,
                         number: e.number,
@@ -471,9 +508,17 @@ function getNodes() {
                     };
                     nodelist.push(node)
                 } else {
-                    // Dealing with all other nodes
-                    if (e.type == 1) {
-                        domains[1].patterns.push(e.id) // TODO: change later
+                    if (e.type == 1) { // Dealing with connectors
+                        json.link.forEach(function (f) {
+                            if (f.source.id == e.id) { // might be a problem if domain node is a source only. maybe search both
+                                if (f.target.type == 2) {
+                                    var domainNumber = convertDomainToInt(f.target.number)
+                                    domains[domainNumber].patterns.push(convertPatternToInt(e.pattern))
+                                    domains[domainNumber].connectors.push(e.id)
+                                }
+                            }
+                        })
+
                     }
                     let numNodes = 7, i = 0, currentPattern = 1
                     if (convertPatternToInt(e.pattern) != currentPattern) {
@@ -486,11 +531,11 @@ function getNodes() {
                         type: e.type,
                         status: e.status,
                         pattern: e.pattern,
-                        domain: 1 //TODO: Change later
                     };
                     nodelist.push(node)
                 }
             });
+            console.log(domains)
             draw(nodelist, json.link)
         },
 
@@ -1090,7 +1135,7 @@ function _findPatternByID(id) {
 }
 
 function _findDomainByID(id) {
-    return this.forceLayout.nodes().filter(d => d.type == 2 && d.domain == id)[0];
+    return this.forceLayout.nodes().filter(d => d.type == 2 && convertDomainToInt(d.number) == id)[0];
 }
 
 function _findLink(source, target) {
@@ -1158,6 +1203,22 @@ function nodesIndexToID(ind) {
 }
 
 function updateDropDown(nodes, link) {
+    // Domain
+    var select = document.getElementById("add_domain_dropdown");
+    $('#add_domain_dropdown').empty()
+    nodes.forEach(function (name, value) {
+        if (name.type == 2) {
+            var option = document.createElement('option');
+            option.text = name.number;
+            option.value = convertDomainToInt(name.number)
+            select.add(option, 0);
+        }
+    })
+    var option = document.createElement('option');
+    option.text = 'New Domain'
+    option.value = _nextDomainID()
+    select.add(option, 0);
+
     // Add Node
     var select = document.getElementById("add_pattern_dropdown");
     $('#add_pattern_dropdown').empty()
