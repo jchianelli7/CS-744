@@ -95,8 +95,6 @@ document.querySelector('#btn_node').addEventListener('click', e => {
 
     var f = document.getElementById("add_domain_dropdown");
     var domain = f.options[f.selectedIndex].value;
-    console.log(domains)
-    console.log(pattern)
 
     if (this.forceLayout.nodes().length == 0) {
         // Need to add domain node
@@ -177,8 +175,6 @@ document.querySelector('#modal_btn_node').addEventListener('click', e => {
         }
     })
     if (linkPatternID != -1) {
-        console.log(domains[domain])
-        console.log(linkPatternID)
         if (domains[domain].connectors.includes(linkPatternID)) { // compare with connector node id
             this.addNode(1, pattern, linkPatternID, domain);
         } else {
@@ -265,11 +261,6 @@ function addNode(type, pattern, linkPattern, domainNumber) {
         $(this).trigger(M.toast({html: 'Error: Pattern cannot contain more than 7 nodes'})); //no more than 7 nodes
     }
 
-    // console.log(domains[domainNumber])
-    // if (!domains[domainNumber].patterns.includes(parseInt(pattern))) {
-    //     $(this).trigger(M.toast({html: 'Error: Selected pattern does not exist in domain'}));
-    // }
-
     let id = this._nextID()
     let number = 'N' + ("0" + id).slice(-2);
 
@@ -283,7 +274,6 @@ function addNode(type, pattern, linkPattern, domainNumber) {
         x: Math.random(),
         y: Math.random()
     };
-    console.log(node)
 
     if (type != 2) {
         // Dont push domain node to pattern node tracker
@@ -292,7 +282,6 @@ function addNode(type, pattern, linkPattern, domainNumber) {
     this.forceLayout.nodes().push(node);
 
     // If connector node, link with domain node
-    console.log(domainNumber)
     if (type == 1) {
         if (domains[domainNumber].patterns.length == 0) {
             var domainId = this.addDomain()
@@ -388,8 +377,6 @@ function addNode(type, pattern, linkPattern, domainNumber) {
             })
             if (linkCount.length == 2) nodesWith2Links.push(node)
         })
-
-        console.log(nodesWith2Links)
 
         //get neighbor of node w 2 links
         var neighbor = []
@@ -535,7 +522,6 @@ function getNodes() {
                     nodelist.push(node)
                 }
             });
-            console.log(domains)
             draw(nodelist, json.link)
         },
 
