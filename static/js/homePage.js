@@ -98,7 +98,7 @@ document.querySelector('#btn_node').addEventListener('click', e => {
 
     if (this.forceLayout.nodes().length == 0) {
         // Need to add domain node
-        this.addNode(1, pattern, -1, domain) // very first node
+        this.addNode(1, pattern, -1, domain, -1) // very first node
     } else if (domains[domain].patterns.length == 0) {
         // if new domain, then make sure new pattern as well
         if (patterns[pattern].nodes.length != 0) {
@@ -106,7 +106,22 @@ document.querySelector('#btn_node').addEventListener('click', e => {
         } else {
             // create new domain AND pattern by creating a new connector node
             // the rest is handled in add node
-            this.addNode(1, pattern, -1, domain) // very first node
+            var found = false
+            domains.forEach(function (domain) {
+                if (domain.id != -1) {
+                    found = true
+                }
+            })
+
+            if (!found) {
+                this.addNode(1, pattern, -1, domain, -1) // very first node
+            } else {
+                // Ask what to link domain to
+                $('#domain_modal_text').text('Connect new domain to what existing domain?')
+                $('#domainModalButton').click()
+                return;
+            }
+            // this.addNode(1, pattern, -1, domain) // very first node
         }
     } else if (!domains[domain].patterns.includes(parseInt(pattern)) && patterns[pattern].nodes.length != 0) {
         //domain has patterns but not the selected pattern
@@ -128,7 +143,7 @@ document.querySelector('#btn_node').addEventListener('click', e => {
         $('#modalButton').click()
         return;
     } else {
-        this.addNode(0, pattern, -1, domain);
+        this.addNode(0, pattern, -1, domain, -1);
     }
 });
 
@@ -176,7 +191,7 @@ document.querySelector('#modal_btn_node').addEventListener('click', e => {
     })
     if (linkPatternID != -1) {
         if (domains[domain].connectors.includes(linkPatternID)) { // compare with connector node id
-            this.addNode(1, pattern, linkPatternID, domain);
+            this.addNode(1, pattern, linkPatternID, domain, -1);
         } else {
             $(this).trigger(M.toast({html: 'Error: unable to add new pattern to specified pattern. Not in domain.'}));
         }
@@ -185,6 +200,26 @@ document.querySelector('#modal_btn_node').addEventListener('click', e => {
     else
         $(this).trigger(M.toast({html: 'Error: unable to add new pattern to specified link.'}));
 });
+
+document.querySelector('#modal_btn_domain').addEventListener('click', e => {
+    var e = document.getElementById("add_pattern_dropdown");
+    var pattern = e.options[e.selectedIndex].value;
+    var g = document.getElementById("modal_domain_dropdown");
+    var existingDomain = g.options[g.selectedIndex].value;
+    var f = document.getElementById("add_domain_dropdown");
+    var newDomain = f.options[f.selectedIndex].value;
+
+
+    console.log(existingDomain)
+    console.log(newDomain)
+    console.log(_findDomainByID(existingDomain))
+    console.log(_findDomainByID(newDomain))
+    var linkDomainId = _findDomainByID(existingDomain).id
+    //this add node...
+    this.addNode(1, pattern, -1, newDomain, linkDomainId)
+
+});
+
 
 $('#send').on('click', function () {
     let text = $('#input_text').val()
@@ -255,7 +290,7 @@ $('#send').on('click', function () {
 
 /* Button Event End */
 
-function addNode(type, pattern, linkPattern, domainNumber) {
+function addNode(type, pattern, linkPattern, domainNumber, linkDomainId) {
     if (patterns[pattern].nodes.length == 7) {
         // Should never display
         $(this).trigger(M.toast({html: 'Error: Pattern cannot contain more than 7 nodes'})); //no more than 7 nodes
@@ -289,6 +324,11 @@ function addNode(type, pattern, linkPattern, domainNumber) {
             domains[domainNumber].patterns.push(convertPatternToInt(node.pattern))
             domains[domainNumber].connectors.push(node.id)
             this.addLink(id, domainId)
+            // Also link with existing domain if specified
+            if (linkDomainId != -1) {
+                console.log(linkDomainId)
+                this.addLink(linkDomainId, domainId)
+            }
         } else {
             domains[domainNumber].patterns.push(convertPatternToInt(node.pattern))
             domains[domainNumber].connectors.push(node.id)
@@ -415,7 +455,9 @@ function addNode(type, pattern, linkPattern, domainNumber) {
             // console.log(JSON.parse(response)) // log the returned json to the console
             console.log("success"); // another sanity check
             var modal = document.getElementById('myModal');
+            var modal2 = document.getElementById('domainModal');
             modal.style.display = "none";
+            modal2.style.display = "none";
             _redraw()
         },
 
@@ -1370,6 +1412,18 @@ function updateDropDown(nodes, link) {
             var option = document.createElement('option');
             option.text = name.pattern;
             option.value = convertPatternToInt(name.pattern)
+            select.add(option, 0);
+        }
+    })
+
+    //Add Domain
+    var select = document.getElementById("modal_domain_dropdown");
+    $('#modal_domain_dropdown').empty()
+    nodes.forEach(function (name, value) {
+        if (name.type == 2) {
+            var option = document.createElement('option');
+            option.text = name.number;
+            option.value = convertDomainToInt(name.number)
             select.add(option, 0);
         }
     })
