@@ -55,7 +55,8 @@ class Node(models.Model):
     def delete(self, using=None, keep_parents=False):
         if (self.type == 1 and self.link.count() > 0):  # What if the connector is linked to another connector?
             for x in self.link.all():
-                if (x.type != 1):
+                # update to check if connected to domain node
+                if (x.type == 0):
                     raise Node.nodeDeleteError('you can not delete the connector when pattern have other normal node')
 
         for x in self.link.all():

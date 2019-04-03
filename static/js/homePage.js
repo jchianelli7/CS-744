@@ -809,6 +809,7 @@ function prepareDelete(pattern, _id) {
             found = true;
             if (patterns[pattern].nodes[j].type == 1) {
                 // Skip ahead and either delete it or error
+                // connector node
                 this.deleteNode(pattern, id)
                 console.log('regular delete')
                 return
@@ -900,9 +901,17 @@ function deleteNode(pattern, _id) {
 
     // Make sure node exists in pattern
     var found = false;
+    var isConnector = false;
+    var connectorDomain, patternDomain = -1
     for (var j = 0; j < patterns[pattern].nodes.length; j++) {
         if (patterns[pattern].nodes[j].id == id) {
             found = true;
+            // Check if a connector node
+            if (patterns[pattern].nodes[j].type == 1) {
+                isConnector = true
+                connectorDomain = patterns[pattern].nodes[j].id
+                patternDomain = convertPatternToInt(patterns[pattern].nodes[j].pattern)
+            }
             break;
         }
     }
@@ -910,6 +919,7 @@ function deleteNode(pattern, _id) {
         $(this).trigger(M.toast({html: 'Error: Node is not in selected pattern'}));
         return
     }
+
 
     let data = {
         'link': []
@@ -929,11 +939,92 @@ function deleteNode(pattern, _id) {
             let json = JSON.parse(response)
             console.log(json)
 
-            //_redraw()
+
+            var domainNumber = -1
+            if (isConnector) {
+                // check and see if domain contains other connectors
+                // if it does, remove current connector and pattern from list
+                // if not, delete domain node as well as node
+                domains.forEach(function (domain, i) {
+                    console.log(i)
+                    console.log(domain)
+                    if (domain.connectors.includes(parseInt(connectorDomain))) {
+                        domainNumber = i
+                    }
+                })
+                if (domains[domainNumber].connectors.length > 1) {
+                    let i = 0;
+                    while (i < domains[domainNumber].connectors.length) {
+                        if (domains[domainNumber].connectors[i] == id) {
+                            console.log('removing ' + id + ' from domain connectors')
+
+                            domains[domainNumber].connectors.splice(i, 1)
+                        }
+                        else
+                            i++;
+                    }
+                    i = 0;
+                    while (i < domains[domainNumber].patterns.length) {
+                        if (domains[domainNumber].patterns[i] == parseInt(pattern)) {
+                            console.log('removing ' + id + ' from domain patterns')
+                            domains[domainNumber].patterns.splice(i, 1)
+                        }
+                        else
+                            i++;
+                    }
+                } else {
+                    console.log('deleting domain node')
+                    deleteDomainNode(domains[domainNumber].id)
+                }
+            }
+
+            // remove connector node from front end data structure
             let i = 0;
             while (i < nodes.length) {
                 if (nodes[i].id == id) {
                     patterns[pattern].nodes.splice(i, 1);
+                    nodes.splice(i, 1);
+                }
+                else
+                    i++;
+            }
+
+            draw(json.node, json.link)
+        },
+
+        // handle a non-successful response
+        error: function (xhr, errmsg, err) {
+            // $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: " + errmsg +
+            //     " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+            // console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+            $(this).trigger(M.toast({html: xhr.responseJSON.message}))
+        }
+    });
+}
+
+function deleteDomainNode(id) {
+    let nodes = this.forceLayout.nodes();
+    let data = {
+        'link': []
+    }
+
+    data.link.push({
+        'source': {'id': id}
+    })
+    $.ajax({
+        url: "/homepage/deleteNode/", // the endpoint
+        type: "POST", // http method
+        data: JSON.stringify(data),
+
+        // handle a successful response
+        success: function (response) {
+            console.log("deleted domain"); // another sanity check
+            let json = JSON.parse(response)
+            console.log(json)
+
+            let i = 0;
+            while (i < nodes.length) {
+                if (nodes[i].id == id) {
                     nodes.splice(i, 1);
                 }
                 else
