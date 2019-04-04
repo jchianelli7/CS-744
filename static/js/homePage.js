@@ -236,6 +236,10 @@ $('#send').on('click', function () {
         var id1 = e.options[e.selectedIndex].value;
         var id2 = f.options[f.selectedIndex].value;
 
+        if (_findNodeByID(id1).type == 2 || _findNodeByID(id2).type == 2) {
+            $('#send').trigger(M.toast({html: 'Error: Domain nodes can\'t send or recieve messages.'}))
+        }
+
         var paths = setPath()
         var sp = new ShortestPathCalculator(forceLayout.nodes(), paths);
         var route = sp.findRoute(find(id1), find(id2));
