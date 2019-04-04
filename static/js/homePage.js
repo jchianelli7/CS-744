@@ -654,11 +654,28 @@ function updateStatus(newNodes) {
     //update status
     sel.each(function (d) {
         const node = d3.select(this);
-        node.append('circle').attr('r', 0)
-        // .style('fill', d => d.type == 1 ? "blue" : (d.status == true ? "white" : "red"))
-            .style('fill', d => d.status == true ? (d.type == 1 ? "blue" : "white") : "red")
-            .transition().duration(750).ease('elastic')
-            .attr('r', 20);
+        node.append("circle")
+                .attr("r", function (d) {
+                    if (d.type == 2)
+                        return 0;
+                    return 20
+                })
+                .style('fill', d => d.status == true ? (d.type == 1 ? "blue" : "white") : "red")
+                .transition().duration(750).ease('elastic')
+
+            node.append("rect")
+                .attr("width", function (d) {
+                    if (d.type != 2)
+                        return 0;
+                    return 40
+                })
+                .attr("height", function (d) {
+                    if (d.type != 2)
+                        return 0;
+                    return 40
+                })
+                .style('fill', d => d.status == true ? (d.type == 1 ? "blue" : "white") : "red")
+                .transition().duration(750).ease('elastic')
         node.append('text')
             .text(node => node.number)
             .attr('font-size', 8)
