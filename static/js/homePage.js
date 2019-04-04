@@ -1203,11 +1203,6 @@ function _updateNodes() {
                 .style('fill', d => d.status == true ? (d.type == 1 ? "blue" : "white") : "red")
                 .transition().duration(750).ease('elastic')
 
-
-            //node.append('circle').attr('r', 0)
-            //     .style('fill', d => d.status == true ? (d.type == 1 ? "blue" : "white") : "red")
-            //     .transition().duration(750).ease('elastic')
-            //     .attr('r', 20);
             node.append('text')
                 .text(node => node.number)
                 .attr('font-size', 8)
@@ -1549,7 +1544,7 @@ function clickNode(d) {
         $('#message_modal_caption').text("Patterns: ")
         $('#message_modal_id').text("ID: " + d.id)
         $('#message_modal_status').text("Status: " + (d.status == true ? "Active" : "Inactive"))
-        $('#message_modal_type').text("Type: " + (d.type == 0 ? "Non-connector" : "Connector"))
+        $('#message_modal_type').text("Type: Domain")
         $('#messages_list').empty()
 
         var items = [];
@@ -1575,5 +1570,3 @@ function clickNode(d) {
 
 
 }
-
-
