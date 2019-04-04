@@ -655,27 +655,27 @@ function updateStatus(newNodes) {
     sel.each(function (d) {
         const node = d3.select(this);
         node.append("circle")
-                .attr("r", function (d) {
-                    if (d.type == 2)
-                        return 0;
-                    return 20
-                })
-                .style('fill', d => d.status == true ? (d.type == 1 ? "blue" : "white") : "red")
-                .transition().duration(750).ease('elastic')
+            .attr("r", function (d) {
+                if (d.type == 2)
+                    return 0;
+                return 20
+            })
+            .style('fill', d => d.status == true ? (d.type == 1 ? "blue" : "white") : "red")
+            .transition().duration(750).ease('elastic')
 
-            node.append("rect")
-                .attr("width", function (d) {
-                    if (d.type != 2)
-                        return 0;
-                    return 40
-                })
-                .attr("height", function (d) {
-                    if (d.type != 2)
-                        return 0;
-                    return 40
-                })
-                .style('fill', d => d.status == true ? (d.type == 1 ? "blue" : "white") : "red")
-                .transition().duration(750).ease('elastic')
+        node.append("rect")
+            .attr("width", function (d) {
+                if (d.type != 2)
+                    return 0;
+                return 40
+            })
+            .attr("height", function (d) {
+                if (d.type != 2)
+                    return 0;
+                return 40
+            })
+            .style('fill', d => d.status == true ? (d.type == 1 ? "blue" : "white") : "red")
+            .transition().duration(750).ease('elastic')
         node.append('text')
             .text(node => node.number)
             .attr('font-size', 8)
@@ -1504,44 +1504,72 @@ function clearPath() {
 
 function clickNode(d) {
     console.log(d);
-    $('#message_modal_id').text("ID: " + d.id)
-    $('#message_modal_pattern').text("Pattern: " + d.pattern)
-    $('#message_modal_status').text("Status: " + (d.status == true ? "Active" : "Inactive"))
-    $('#message_modal_type').text("Type: " + (d.type == 0 ? "Non-connector" : "Connector"))
-    $('#messages_list').empty()
+    if (d.type != 2) {
+        $('#message_modal_caption').text("Messages: ")
+        $('#message_modal_id').text("ID: " + d.id)
+        $('#message_modal_pattern').text("Pattern: " + d.pattern)
+        $('#message_modal_status').text("Status: " + (d.status == true ? "Active" : "Inactive"))
+        $('#message_modal_type').text("Type: " + (d.type == 0 ? "Non-connector" : "Connector"))
+        $('#messages_list').empty()
 
-    let data = {
-        'id': d.id
-    }
-
-    $.ajax({
-        url: "/homepage/getMessage/", // the endpoint
-        type: "POST", // http method
-        data: JSON.stringify(data),
-
-        // handle a successful response
-        success: function (response) {
-            var resp = JSON.parse(response)
-            if (resp.message.length == 0) {
-                $(this).trigger(M.toast({html: 'Alert: Node contains no messages.'}))
-            } else {
-                var items = [];
-                $.each(resp.message, function (i, item) {
-                    items.push('<li>' + (i + 1) + " : " + item.message + '</li>');
-                });
-                $('#messages_list').append(items.join(''));
-            }
-        },
-
-        // handle a non-successful response
-        error: function (xhr, errmsg, err) {
-            // console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
-            $(this).trigger(M.toast({html: xhr.responseJSON.message}))
+        let data = {
+            'id': d.id
         }
-    });
+        $.ajax({
+            url: "/homepage/getMessage/", // the endpoint
+            type: "POST", // http method
+            data: JSON.stringify(data),
+
+            // handle a successful response
+            success: function (response) {
+                var resp = JSON.parse(response)
+                if (resp.message.length == 0) {
+                    $(this).trigger(M.toast({html: 'Alert: Node contains no messages.'}))
+                } else {
+                    var items = [];
+                    $.each(resp.message, function (i, item) {
+                        items.push('<li>' + (i + 1) + " : " + item.message + '</li>');
+                    });
+                    $('#messages_list').append(items.join(''));
+                }
+            },
+
+            // handle a non-successful response
+            error: function (xhr, errmsg, err) {
+                // console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+                $(this).trigger(M.toast({html: xhr.responseJSON.message}))
+            }
+        });
+    } else {
+        // Domain Node
+        $('#message_modal_caption').text("Patterns: ")
+        $('#message_modal_id').text("ID: " + d.id)
+        $('#message_modal_status').text("Status: " + (d.status == true ? "Active" : "Inactive"))
+        $('#message_modal_type').text("Type: " + (d.type == 0 ? "Non-connector" : "Connector"))
+        $('#messages_list').empty()
+
+        var items = [];
+        $('#messages_list').append(items.join(''));
+        domains.forEach(function (domain) {
+            if (domain.id == d.id) {
+                domain.patterns.forEach(function (pattern, idx) {
+                    var nodeString = ""
+                    patterns[pattern].nodes.forEach(function (node) {
+                        nodeString += (node.number + " ")
+                    })
+                    items.push('<li>' + (idx + 1) + " : " + convertPatternToString(pattern) + ' - ' + nodeString + '</li>');
+
+                })
+            }
+        })
+        $('#messages_list').append(items.join(''));
+
+    }
 
     // Show the modal
     $('#messageModalButton').click()
+
+
 }
 
 
