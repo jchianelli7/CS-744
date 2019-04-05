@@ -47,7 +47,6 @@ for (var i = 0; i < 99; i++) { //max 99 patterns
 
 var randomCounter = 0
 
-//this.canvas = d3.select('#canvas').append('svg:svg').attr('width', '1200').attr('height', '800');
 var svg = d3.select('#canvas').append('svg').attr('width', '100%').attr('height', '100%')
     .call(d3.behavior.zoom().on("zoom", function () {
         svg.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")")
@@ -80,10 +79,6 @@ var path = []
 
 // Groups
 var groupNodes = []
-// var hull = this.vis.append("path")
-//     .attr("class", "hull");
-// var nodeSaver = this.vis.select('.nodeContainer').selectAll('.node');
-// var vertices = []
 
 var minNodeSize = 2
 
@@ -91,6 +86,7 @@ function radiusOf(element) {
     return 2
 };
 
+// used if < 2 nodes in group
 var groupPath = function (d) {
     var fakePoints = [];
     d.forEach(function (element) {
@@ -107,15 +103,6 @@ var groupPath = function (d) {
     })
     return "M" + d3.geom.hull(fakePoints).join("L") + "Z";
 };
-
-// var groupPath = function(d) {
-//     console.log(d)
-//     return "M" +
-//       d3.geom.hull(d.values.map(function(i) { return [i.x, i.y]; }))
-//         .join("L")
-//     + "Z";
-// };
-// setInterval(this.generateRandomCall, 60000); // Randomly activates node
 
 /* Globals End */
 
@@ -709,7 +696,7 @@ function updateStatus(newNodes) {
                     return 0;
                 return 40
             })
-            .style('fill', d => d.status == true ? (d.type == 1 ? "blue" : "white") : "red")
+            .style('fill', d => d.status == true ? (d.type == 2 ? "green" : "white") : "red")
             .transition().duration(750).ease('elastic')
         node.append('text')
             .text(node => node.number)
@@ -1157,9 +1144,10 @@ function _tick() {
         .enter().insert("path", "test")
         .style("fill", 'none')
         .style("stroke", 'green')
-        .style("stroke-width", 20)
+        .style("stroke-width", 10)
         .style("stroke-linejoin", "round")
         .style("opacity", .2)
+
         .attr("d", groupPath);
 
     this.vis.selectAll("line").remove()
@@ -1178,8 +1166,12 @@ function _tick() {
         .style("stroke-width", 1.5)
         .call(force.drag);
 
-    node.attr("cx", function(d) { return d.x; })
-        .attr("cy", function(d) { return d.y; });
+    node.attr("cx", function (d) {
+        return d.x;
+    })
+        .attr("cy", function (d) {
+            return d.y;
+        });
 
     links.attr('id', d => d.source.id + "," + d.target.id)
         .attr('x1', d => d.source.x).attr('y1', d => d.source.y).attr('x2', d => d.target.x).attr('y2', d => d.target.y);
@@ -1189,19 +1181,30 @@ function _tick() {
         .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
 
     this.vis.selectAll('.node').attr('transform', d => `translate(${d.x}, ${d.y})`);
-
-
-    // nodeSaver.data().forEach(function (d, i) {
-    //     vertices[i] = [d.x, d.y];
-    // })
-    //
-    //
-    // hull.datum(d3.geom.hull(vertices)).attr("d", function (d) {
-    //     return "M" + d.join("L") + "Z";
-    // });
 }
 
 function _redraw() {
+    // create groups
+    var groupArray = [] //flattened array of arrays of ids. i.e. [ [1,2,3], [4,5] ]
+    domains.forEach(function (domain) {
+        if (domain.id != -1) {
+            var array = []
+            domain.patterns.forEach(function (pattern) {
+                patterns[pattern].nodes.forEach(function (node) {
+                    array.push(node.id)
+                })
+                array.push(domain.id)
+            })
+            groupArray.push(array)
+        }
+    })
+
+    this.groupNodes = groupArray.map(function (pattern, index) {
+        return pattern.map(function (member) {
+            return _findNodeByID(member)
+        });
+    });
+    console.log(this.groupNodes)
     this._updateNodes();
     this._updateLinks();
     this.forceLayout.start();
@@ -1233,17 +1236,21 @@ function draw(nodes, links) {
         });
     });
 
+    // create groups
     var groupArray = [] //flattened array of arrays of ids. i.e. [ [1,2,3], [4,5] ]
-    patterns.forEach(function (pattern) {
-        if (pattern.nodes.length != 0) {
+    domains.forEach(function (domain) {
+        if (domain.id != -1) {
             var array = []
-            pattern.nodes.forEach(function (f) {
-                array.push(f.id)
+            domain.patterns.forEach(function (pattern) {
+                patterns[pattern].nodes.forEach(function (node) {
+                    array.push(node.id)
+                })
+                array.push(domain.id)
             })
             groupArray.push(array)
         }
     })
-    console.log(groupArray)
+
     this.groupNodes = groupArray.map(function (pattern, index) {
         return pattern.map(function (member) {
             return _findNodeByID(member)
@@ -1287,7 +1294,7 @@ function _updateNodes() {
                         return 0;
                     return 40
                 })
-                .style('fill', d => d.status == true ? (d.type == 1 ? "blue" : "white") : "red")
+                .style('fill', d => d.status == true ? (d.type == 2 ? "green" : "white") : "red")
                 .transition().duration(750).ease('elastic')
 
             node.append('text')
