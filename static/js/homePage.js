@@ -79,11 +79,42 @@ if (safety < 500) {
 var path = []
 
 // Groups
+var groupNodes = []
 // var hull = this.vis.append("path")
 //     .attr("class", "hull");
 // var nodeSaver = this.vis.select('.nodeContainer').selectAll('.node');
 // var vertices = []
-//
+
+var minNodeSize = 2
+
+function radiusOf(element) {
+    return 2
+};
+
+var groupPath = function (d) {
+    var fakePoints = [];
+    d.forEach(function (element) {
+        fakePoints = fakePoints.concat([   // "0.7071" is the sine and cosine of 45 degree for corner points.
+            [(element.x), (element.y + (radiusOf(element) - minNodeSize))],
+            [(element.x + (0.7071 * (radiusOf(element) - minNodeSize))), (element.y + (0.7071 * (radiusOf(element) - minNodeSize)))],
+            [(element.x + (radiusOf(element) - minNodeSize)), (element.y)],
+            [(element.x + (0.7071 * (radiusOf(element) - minNodeSize))), (element.y - (0.7071 * (radiusOf(element) - minNodeSize)))],
+            [(element.x), (element.y - (radiusOf(element) - minNodeSize))],
+            [(element.x - (0.7071 * (radiusOf(element) - minNodeSize))), (element.y - (0.7071 * (radiusOf(element) - minNodeSize)))],
+            [(element.x - (radiusOf(element) - minNodeSize)), (element.y)],
+            [(element.x - (0.7071 * (radiusOf(element) - minNodeSize))), (element.y + (0.7071 * (radiusOf(element) - minNodeSize)))]
+        ]);
+    })
+    return "M" + d3.geom.hull(fakePoints).join("L") + "Z";
+};
+
+// var groupPath = function(d) {
+//     console.log(d)
+//     return "M" +
+//       d3.geom.hull(d.values.map(function(i) { return [i.x, i.y]; }))
+//         .join("L")
+//     + "Z";
+// };
 // setInterval(this.generateRandomCall, 60000); // Randomly activates node
 
 /* Globals End */
@@ -1119,9 +1150,46 @@ function _tick() {
         // Do nothing
     }
 
+    this.vis.selectAll("path").remove()
+    this.vis.selectAll("path")
+        .data(groupNodes)
+        .attr("d", groupPath)
+        .enter().insert("path", "test")
+        .style("fill", 'none')
+        .style("stroke", 'green')
+        .style("stroke-width", 20)
+        .style("stroke-linejoin", "round")
+        .style("opacity", .2)
+        .attr("d", groupPath);
+
+    this.vis.selectAll("line").remove()
+    const layout_links = this.forceLayout.links()
+    const links = this.vis.select('.linkContainer').selectAll(".link").data(layout_links);
+    links.enter().insert('line').attr("class", 'link').style('stroke', 'white').style('stroke-width', 5)
+
+    //this.vis.selectAll("circle").remove()
+    const nodes = this.forceLayout.nodes()
+    var node = this.vis.select('.nodeContainer').selectAll(".node").data(nodes)
+        .enter()
+        .append("circle")
+        .attr("class", "node")
+        .attr("r", 20)
+        .style("fill", "blue")
+        .style("stroke-width", 1.5)
+        .call(force.drag);
+
+    node.attr("cx", function(d) { return d.x; })
+        .attr("cy", function(d) { return d.y; });
+
+    links.attr('id', d => d.source.id + "," + d.target.id)
+        .attr('x1', d => d.source.x).attr('y1', d => d.source.y).attr('x2', d => d.target.x).attr('y2', d => d.target.y);
+
+
     this.vis.selectAll(".link").attr("x1", d => d.source.x).attr("y1", d => d.source.y)
         .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+
     this.vis.selectAll('.node').attr('transform', d => `translate(${d.x}, ${d.y})`);
+
 
     // nodeSaver.data().forEach(function (d, i) {
     //     vertices[i] = [d.x, d.y];
@@ -1164,6 +1232,25 @@ function draw(nodes, links) {
             source, target
         });
     });
+
+    var groupArray = [] //flattened array of arrays of ids. i.e. [ [1,2,3], [4,5] ]
+    patterns.forEach(function (pattern) {
+        if (pattern.nodes.length != 0) {
+            var array = []
+            pattern.nodes.forEach(function (f) {
+                array.push(f.id)
+            })
+            groupArray.push(array)
+        }
+    })
+    console.log(groupArray)
+    this.groupNodes = groupArray.map(function (pattern, index) {
+        return pattern.map(function (member) {
+            return _findNodeByID(member)
+        });
+    });
+    console.log(this.groupNodes)
+
     this.updateDropDown(nodes, links)
     this._redraw()
 }
@@ -1220,7 +1307,6 @@ function _updateNodes() {
         });
     }).call(this.forceLayout.drag);
 
-    binding.exit().remove();
     binding.exit().remove();
 
     this.updateDropDown(nodes, this.forceLayout.links())
