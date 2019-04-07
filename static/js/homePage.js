@@ -88,8 +88,10 @@ function radiusOf(element) {
 
 // used if < 2 nodes in group
 var groupPath = function (d) {
+    if (d.length == 0) return
     var fakePoints = [];
     d.forEach(function (element) {
+        if (element === undefined) return
         fakePoints = fakePoints.concat([   // "0.7071" is the sine and cosine of 45 degree for corner points.
             [(element.x), (element.y + (radiusOf(element) - minNodeSize))],
             [(element.x + (0.7071 * (radiusOf(element) - minNodeSize))), (element.y + (0.7071 * (radiusOf(element) - minNodeSize)))],
@@ -1027,8 +1029,6 @@ function deleteNode(pattern, _id) {
                 // if it does, remove current connector and pattern from list
                 // if not, delete domain node as well as node
                 domains.forEach(function (domain, i) {
-                    console.log(i)
-                    console.log(domain)
                     if (domain.connectors.includes(parseInt(connectorDomain))) {
                         domainNumber = i
                     }
@@ -1054,6 +1054,25 @@ function deleteNode(pattern, _id) {
                             i++;
                     }
                 } else {
+                    //remove last connector then remove domain node
+                    let i = 0;
+                    while (i < domains[domainNumber].connectors.length) {
+                        if (domains[domainNumber].connectors[i] == id) {
+                            console.log('removing ' + id + ' from domain connectors')
+                            domains[domainNumber].connectors.splice(i, 1)
+                        }
+                        else
+                            i++;
+                    }
+                    i = 0;
+                    while (i < domains[domainNumber].patterns.length) {
+                        if (domains[domainNumber].patterns[i] == parseInt(pattern)) {
+                            console.log('removing ' + id + ' from domain patterns')
+                            domains[domainNumber].patterns.splice(i, 1)
+                        }
+                        else
+                            i++;
+                    }
                     console.log('deleting domain node')
                     deleteDomainNode(domains[domainNumber].id)
                 }
@@ -1084,6 +1103,7 @@ function deleteNode(pattern, _id) {
 }
 
 function deleteDomainNode(id) {
+    console.log('deleting domainnode '+id)
     let nodes = this.forceLayout.nodes();
     let data = {
         'link': []
@@ -1101,7 +1121,7 @@ function deleteDomainNode(id) {
         success: function (response) {
             console.log("deleted domain"); // another sanity check
             let json = JSON.parse(response)
-            console.log(json)
+            console.log(domains)
 
             let i = 0;
             while (i < nodes.length) {
@@ -1137,6 +1157,7 @@ function _tick() {
         // Do nothing
     }
 
+
     this.vis.selectAll("path").remove()
     this.vis.selectAll("path")
         .data(groupNodes)
@@ -1147,7 +1168,6 @@ function _tick() {
         .style("stroke-width", 10)
         .style("stroke-linejoin", "round")
         .style("opacity", .2)
-
         .attr("d", groupPath);
 
     this.vis.selectAll("line").remove()
@@ -1201,7 +1221,10 @@ function _redraw() {
 
     this.groupNodes = groupArray.map(function (pattern, index) {
         return pattern.map(function (member) {
-            return _findNodeByID(member)
+            var n = _findNodeByID(member)
+            console.log(n)
+            if (n === undefined) return;
+            return n
         });
     });
     console.log(this.groupNodes)
@@ -1253,7 +1276,10 @@ function draw(nodes, links) {
 
     this.groupNodes = groupArray.map(function (pattern, index) {
         return pattern.map(function (member) {
-            return _findNodeByID(member)
+            var n = _findNodeByID(member)
+            console.log(n)
+            if (n === undefined) return;
+            return n
         });
     });
     console.log(this.groupNodes)
