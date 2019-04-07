@@ -32,6 +32,14 @@
             margin-left: 40px;
         }
 
+        .hull {
+            fill: none;
+            stroke: steelblue;
+            stroke-width: 15;
+            stroke-linejoin: round;
+            opacity: .3;
+        }
+
 
     </style>
 </head>
@@ -61,7 +69,12 @@
         <div class="z-depth-5" id="admin">
             <a style="margin-left: 33px;font-size: 25px;color: black">Add</a>
             <ul style="margin-left: 33px;height: 415px;">
-
+                <li>Add Node to selected domain:</li>
+                <li>
+                    <div class="input-field" style="width: 150px;margin:1px 0 0 1px;">
+                        <select id="add_domain_dropdown"></select>
+                    </div>
+                </li>
                 <li>Add Node to selected pattern:</li>
                 <li>
                     <div class="input-field" style="width: 150px;margin:1px 0 0 1px;">
@@ -177,6 +190,7 @@
 <!-- Trigger/Open The Modal -->
 <button id="modalButton" style="display: none"></button>
 <button id="messageModalButton" style="display: none"></button>
+<button id="domainModalButton" style="display: none"></button>
 
 <!-- The Modal -->
 <div id="myModal" class="modal">
@@ -203,17 +217,33 @@
             <h5 id="message_modal_status" class="tab" style="display: inline;"></h5>
             <h5 id="message_modal_type" class="tab" style="display: inline;"></h5>
 
-            <h5>Messages:</h5>
+            <h5 id="message_modal_caption">Messages:</h5>
             <ul id="messages_list"></ul>
 
         </div>
     </div>
 </div>
 
+<!-- The Domain Modal -->
+<div id="domainModal" class="modal">
+    <!-- Modal content -->
+    <div class="modal-content">
+        <span class="close_modal_domain">&times;</span>
+        <h5 id="domain_modal_text"></h5>
+        <div class="input-field" style="width: 150px;margin:1px 0 0 1px;">
+            <select id="modal_domain_dropdown"></select>
+        </div>
+        <a id="modal_btn_domain" class="waves-effect waves-light btn-small" style="margin: 6px 0 0 30px;">Add
+            Domain</a>
+    </div>
+</div>
+
 </body>
 <script src="../../static/js/jquery-3.3.1.js"></script>
 <script src="../../static/js/materialize.min.js"></script>
-<script src='//cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.js'></script>
+{#<script src='//cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.js'></script>#}
+<script src="//d3js.org/d3.v3.min.js"></script>
+
 <script src="../../static/js/homePage.js"></script>
 <script src="../../static/js/ShortestPathCalculator.js"></script>
 <script src="../../static/js/ShortestPathUtils.js"></script>
@@ -230,14 +260,19 @@
     // Get the modal
     var modal = document.getElementById('myModal');
     var messageModal = document.getElementById('messageModal');
+    var domainModal = document.getElementById('domainModal');
+
 
     // Get the button that opens the modal
     var btn = document.getElementById("modalButton");
     var messageBtn = document.getElementById("messageModalButton");
+    var domainBtn = document.getElementById("domainModalButton");
+
 
     // Get the <span> element that closes the modal
     var span = document.getElementsByClassName("close_modal")[0];
     var spanMessage = document.getElementsByClassName("close_modal_message")[0];
+    var spanDomain = document.getElementsByClassName("close_modal_domain")[0];
 
 
     // When the user clicks on the button, open the modal
@@ -247,6 +282,9 @@
     messageBtn.onclick = function () {
         messageModal.style.display = "block";
     }
+    domainBtn.onclick = function () {
+        domainModal.style.display = "block";
+    }
 
     // When the user clicks on <span> (x), close the modal
     span.onclick = function () {
@@ -254,6 +292,9 @@
     }
     spanMessage.onclick = function () {
         messageModal.style.display = "none"
+    }
+    spanDomain.onclick = function () {
+        domainModal.style.display = "none"
     }
 
     // When the user clicks anywhere outside of the modal, close it
@@ -263,6 +304,9 @@
         }
         if (event.target == messageModal) {
             messageModal.style.display = "none"
+        }
+        if (event.target == domainModal) {
+            domainModal.style.display = "none"
         }
     }
 

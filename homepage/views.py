@@ -42,7 +42,10 @@ def get(request):
         nodeList = []
         if (Node.objects.count() > 0):
             for i in Node.objects.all():
-                node = {'id': i.id, 'number': i.number, 'type': i.type, 'status': i.status, 'pattern': i.pattern}
+                if(i.type == 2):
+                    node = {'id': i.id, 'number': i.number, 'type': i.type, 'status': i.status}
+                else:
+                    node = {'id': i.id, 'number': i.number, 'type': i.type, 'status': i.status, 'pattern': i.pattern}
                 nodeList.append(node)
                 for target in i.link.all():
                     dict = {'source': {'id': i.id, 'number': i.number, 'type': i.type, 'status': i.status,
