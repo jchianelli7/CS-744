@@ -303,6 +303,7 @@ $('#send').on('click', function () {
             // handle a successful response
             success: function (response) {
                 console.log("Message sent"); // another sanity check
+                $('#input_text').val("");
 
             },
 
@@ -1242,7 +1243,6 @@ function _redraw() {
     this.groupNodes = groupArray.map(function (pattern, index) {
         return pattern.map(function (member) {
             var n = _findNodeByID(member)
-            console.log(n)
             if (n === undefined) return;
             return n
         });
@@ -1297,7 +1297,6 @@ function draw(nodes, links) {
     this.groupNodes = groupArray.map(function (pattern, index) {
         return pattern.map(function (member) {
             var n = _findNodeByID(member)
-            console.log(n)
             if (n === undefined) return;
             return n
         });
