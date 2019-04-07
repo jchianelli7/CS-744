@@ -689,7 +689,7 @@ function updateStatus(newNodes) {
                     return 0;
                 return 20
             })
-            .style('fill', d => d.status == true ? (d.type == 1 ? "blue" : "white") : "red")
+            .style('fill', d => d.status == true ? (d.type == 1 ? "blue" : "white") : (d.type == 1 ? "orange" : "red"))
             .transition().duration(750).ease('elastic')
 
         node.append("rect")
@@ -1325,7 +1325,7 @@ function _updateNodes() {
                         return 0;
                     return 20
                 })
-                .style('fill', d => d.status == true ? (d.type == 1 ? "blue" : "white") : "red")
+                .style('fill', d => d.status == true ? (d.type == 1 ? "blue" : "white") : (d.type == 1 ? "orange" : "red"))
                 .transition().duration(750).ease('elastic')
 
             node.append("rect")
