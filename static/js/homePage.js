@@ -77,6 +77,9 @@ if (safety < 500) {
 // Array for the path if requested
 var path = []
 
+
+setInterval(this.generateRandomCall, 60000); // Randomly activates node
+
 // Groups
 var groupNodes = []
 
@@ -283,7 +286,8 @@ $('#send').on('click', function () {
                 translatedRoute.paths.push(path)
             })
             drawPath(translatedRoute.paths)
-            setTimeout(clearPath, 10000)
+            var timeout = translatedRoute.paths.length > 10 ? 15000 : 10000
+            setTimeout(clearPath, timeout)
         }
 
         let data = {
@@ -1173,7 +1177,23 @@ function _tick() {
     this.vis.selectAll("line").remove()
     const layout_links = this.forceLayout.links()
     const links = this.vis.select('.linkContainer').selectAll(".link").data(layout_links);
-    links.enter().insert('line').attr("class", 'link').style('stroke', 'white').style('stroke-width', 5)
+    links.enter().insert('line').attr("class", 'link')
+        .style('stroke-width', 5).style('stroke', function (d) {
+        var isPath = false
+        var path = getPath()
+        if (typeof path !== 'undefined' && path.length > 0) {
+            // Draw the path
+            path.forEach(function (p) {
+                if ((d.source.id == p.source && d.target.id == p.target) || (d.source.id == p.target && d.target.id == p.source)) {
+                    isPath = true
+                }
+            })
+            return isPath ? "blue" : "white"
+        } else {
+            // No path to draw
+            return "white"
+        }
+    })
 
     //this.vis.selectAll("circle").remove()
     const nodes = this.forceLayout.nodes()
@@ -1607,7 +1627,14 @@ function setPath() {
 }
 
 function drawPath(path) {
-    this.path = path
+    this.path = []
+    var i = 0;
+    (function loop() {
+        this.path.push(path[i])
+        if (++i < path.length) {
+            setTimeout(loop, 1000);
+        }
+    })();
     this._redraw()
 }
 
