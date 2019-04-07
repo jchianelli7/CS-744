@@ -1103,7 +1103,7 @@ function deleteNode(pattern, _id) {
 }
 
 function deleteDomainNode(id) {
-    console.log('deleting domainnode '+id)
+    console.log('deleting domainnode ' + id)
     let nodes = this.forceLayout.nodes();
     let data = {
         'link': []
@@ -1661,6 +1661,8 @@ function clickNode(d) {
     } else {
         // Domain Node
         $('#message_modal_caption').text("Patterns: ")
+        $('#message_modal_pattern').text("")
+
         $('#message_modal_id').text("ID: " + d.id)
         $('#message_modal_status').text("Status: " + (d.status == true ? "Active" : "Inactive"))
         $('#message_modal_type').text("Type: Domain")
