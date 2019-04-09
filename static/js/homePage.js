@@ -888,6 +888,24 @@ function createLink(s, t) {
         return
     }
 
+    var domainIndex = -1
+    domains.forEach(function (domain, idx) {
+        if (domain.connectors.includes(this.forceLayout.nodes()[source].id)) {
+            domainIndex = idx
+        }
+    })
+
+    if (domainIndex == -1) {
+        $(this).trigger(M.toast({html: 'Error: Link not found'}))
+    }
+
+    console.log(domainIndex)
+
+    if (!domains[domainIndex].connectors.includes(this.forceLayout.nodes()[target].id)) {
+        $(this).trigger(M.toast({html: 'Error: Nodes are not in the same domain'}))
+        return
+    }
+
     this.forceLayout.links().push({
         source, target
     });
