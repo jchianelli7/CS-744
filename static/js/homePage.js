@@ -198,6 +198,7 @@ document.querySelector('#btn_delete_pattern').addEventListener('click', e => {
         domains.forEach(function (domain) {
             if (domain.patterns.includes(parseInt(pattern))) {
                 // pattern to be deleted exists in this domain
+                console.log(domain)
                 if (domain.patterns.length == 1) {
                     $(this).trigger(M.toast({html: 'Error: Only one pattern exists in domain. Use delete domain instead'}));
                 } else {
@@ -688,6 +689,15 @@ function addLink(s, l) {
 }
 
 function getNodes() {
+    this.domains = []
+    for (var i = 0; i < 99; i++) { //max 99 patterns
+        var domain = {};
+        domain['id'] = -1;
+        domain['number'] = ''
+        domain['patterns'] = []
+        domain['connectors'] = [];
+        this.domains.push(domain);
+    }
     // GET current nodes in database
     $.ajax({
         url: "/homepage/get/", // the endpoint
@@ -722,6 +732,7 @@ function getNodes() {
                         json.link.forEach(function (f) {
                             if (f.source.id == e.id) { // might be a problem if domain node is a source only. maybe search both
                                 if (f.target.type == 2) {
+                                    console.log('pushing pattern '+e.pattern)
                                     var domainNumber = convertDomainToInt(f.target.number)
                                     domains[domainNumber].patterns.push(convertPatternToInt(e.pattern))
                                     domains[domainNumber].connectors.push(e.id)
@@ -1471,8 +1482,7 @@ function draw(nodes, links) {
             return n
         });
     });
-    console.log(this.groupNodes)
-
+    console.log(domains)
     this.updateDropDown(nodes, links)
     this._redraw()
 }
