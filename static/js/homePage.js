@@ -717,7 +717,6 @@ function getNodes() {
                 if (e.type == 2) {
                     // Dealing with domain nodes only
                     var domainNumber = convertDomainToInt(e.number)
-                    console.log(domainNumber)
                     domains[domainNumber].id = e.id
                     domains[domainNumber].number = e.number
                     const node = {
@@ -732,7 +731,6 @@ function getNodes() {
                         json.link.forEach(function (f) {
                             if (f.source.id == e.id) { // might be a problem if domain node is a source only. maybe search both
                                 if (f.target.type == 2) {
-                                    console.log('pushing pattern '+e.pattern)
                                     var domainNumber = convertDomainToInt(f.target.number)
                                     domains[domainNumber].patterns.push(convertPatternToInt(e.pattern))
                                     domains[domainNumber].connectors.push(e.id)
@@ -1367,6 +1365,8 @@ function _tick() {
             // Draw the path
             path.forEach(function (p) {
                 if ((d.source.id == p.source && d.target.id == p.target) || (d.source.id == p.target && d.target.id == p.source)) {
+                    console.log(d.source)
+                    //console.log(d.target)
                     isPath = true
                 }
             })
@@ -1482,7 +1482,6 @@ function draw(nodes, links) {
             return n
         });
     });
-    console.log(domains)
     this.updateDropDown(nodes, links)
     this._redraw()
 }
@@ -1818,6 +1817,7 @@ function setPath() {
 }
 
 function drawPath(path) {
+    console.log(path)
     this.path = []
     var i = 0;
     (function loop() {
