@@ -320,6 +320,13 @@ $('#send').on('click', function () {
         var sp = new ShortestPathCalculator(forceLayout.nodes(), paths);
         var route = sp.findRoute(find(id1), find(id2));
 
+        console.log(route)
+        if (route.mesg == "OK" && route.path.length == 0) {
+            // Path found but length not calculated
+            $('#send').trigger(M.toast({html: 'Error: try again.'}))
+            return
+        }
+
         // Formats result of path
         var translatedRoute = []
         translatedRoute["source"] = nodesIndexToID(route.source)
@@ -1432,7 +1439,6 @@ function _updateLinks() {
         if (typeof path !== 'undefined' && path.length > 0) {
             // Draw the path
             path.forEach(function (p) {
-                console.log(path)
                 if ((d.source.id == p.source && d.target.id == p.target) || (d.source.id == p.target && d.target.id == p.source)) {
                     isPath = true
                 }
