@@ -24,8 +24,10 @@ class Node(models.Model):
             elif (Node.objects.filter(pattern=self.pattern).count() == 0 and self.type == 0):
                 raise Node.nodeInitialError('inital node of this pattern should be connector')
 
-            elif (Node.objects.filter(pattern=self.pattern).exists() and self.type == 1):
-                raise Node.nodeNumberError('1 connector have been existed in pattern')
+            # this wont work because domains save patterns, plus i check if patterns exist
+            # in the front end before creating
+            #elif (Node.objects.filter(pattern=self.pattern).exists() and self.type == 1):
+                #raise Node.nodeNumberError('1 connector have been existed in pattern')
 
         return super(Node, self).save(*args, **kwargs)
 

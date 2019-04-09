@@ -42,7 +42,7 @@ def get(request):
         nodeList = []
         if (Node.objects.count() > 0):
             for i in Node.objects.all():
-                if(i.type == 2):
+                if (i.type == 2):
                     node = {'id': i.id, 'number': i.number, 'type': i.type, 'status': i.status}
                 else:
                     node = {'id': i.id, 'number': i.number, 'type': i.type, 'status': i.status, 'pattern': i.pattern}
@@ -126,6 +126,63 @@ def deleteNode(request):
                 except Node.nodeDeleteError as e:
                     # response = HttpResponse(json.dumps({'message': e}))
                     return bad_request(message='Error: Cant delete connector node with attached non-connectors')
+        except simplejson.JSONDecodeError:
+            pass
+        else:
+            pass
+        finally:
+            linkList = []
+            nodeList = []
+            if (Node.objects.count() > 0):
+                for i in Node.objects.all():
+                    node = {'id': i.id, 'number': i.number, 'type': i.type, 'status': i.status, 'pattern': i.pattern}
+                    nodeList.append(node)
+                    for target in i.link.all():
+                        dict = {'source': {'id': i.id, 'number': i.number, 'type': i.type, 'status': i.status,
+                                           'pattern': i.pattern},
+                                'target': {'id': target.id, 'number': target.number, 'type': target.type,
+                                           'status': target.status, 'pattern': target.pattern}}
+                        linkList.append(dict)
+
+            resp = {'node': nodeList, 'link': linkList}
+            response = HttpResponse(json.dumps(resp))
+            response.set_cookie('is_superuser', userStatus)
+            response.set_cookie('username', user)
+    return response
+
+
+def deletePattern(request):
+    if (request.COOKIES.get('username') == None or request.COOKIES.get('is_superuser') == None):
+        response = redirect('/homepage/logout/')
+    else:
+        try:
+            userStatus = request.COOKIES.get('is_superuser')
+            user = request.COOKIES.get('username')
+            request = simplejson.loads(request.body)
+            ids = request['link']  # array of ids
+
+            for i in ids:
+                try:
+                    node = Node.objects.filter(id=i)[0]
+                except IndexError:
+                    # response = HttpResponse(json.dumps({'message': 'the node for deleting is not exists.'}))
+                    return bad_request(message='Error: Node not found')
+                except Node.nodeDeleteError as e:
+                    # response = HttpResponse(json.dumps({'message': e}))
+                    return bad_request(message='Error: Cant delete connector node with attached non-connectors')
+
+            # if all nodes are found, then delete
+
+            for i in ids:
+                node = Node.objects.filter(id=i)[0]
+                if(node.type == 0):
+                    node.delete()
+                elif (node.type == 1):
+                    connector = node
+
+            # delete the connector last
+            connector.delete()
+
         except simplejson.JSONDecodeError:
             pass
         else:

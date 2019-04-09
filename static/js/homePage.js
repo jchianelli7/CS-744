@@ -109,8 +109,7 @@ var groupPath = function (d) {
     return "M" + d3.geom.hull(fakePoints).join("L") + "Z";
 };
 
-/* Globals End */
-
+/* Globals End
 /* Button Event Start */
 document.querySelector('#btn_node').addEventListener('click', e => {
     var e = document.getElementById("add_pattern_dropdown");
@@ -184,6 +183,60 @@ document.querySelector('#btn_delete').addEventListener('click', e => {
     var f = document.getElementById("delete_node");
     var id = f.options[f.selectedIndex].value;
     this.prepareDelete(pattern, id);
+});
+
+document.querySelector('#btn_delete_pattern').addEventListener('click', e => {
+    var e = document.getElementById("delete_pattern_dropdown");
+    var pattern = e.options[e.selectedIndex].value;
+    var f = document.getElementById("delete_node");
+    var id = f.options[f.selectedIndex].value;
+
+    var r = confirm("Are you sure you want to delete Pattern " + pattern + "? All associated nodes will be deleted");
+    if (r == true) {
+        // Check if domain contains more than one pattern.
+        // if not, use delete domain instead
+        domains.forEach(function (domain) {
+            if (domain.patterns.includes(parseInt(pattern))) {
+                // pattern to be deleted exists in this domain
+                if (domain.patterns.length == 1) {
+                    $(this).trigger(M.toast({html: 'Error: only one domain exists in pattern. Use delete domain instead'}));
+                } else {
+                    // delete pattern
+                    console.log(patterns[pattern])
+                    let data = {
+                        'link': []
+                    }
+
+                    patterns[pattern].nodes.forEach(function (node) {
+                        data.link.push(node.id)
+                    })
+
+                    $.ajax({
+                        url: "/homepage/deletePattern/", // the endpoint
+                        type: "POST", // http method
+                        data: JSON.stringify(data),
+
+                        // handle a successful response
+                        success: function (response) {
+                            console.log("success"); // another sanity check
+                            let json = JSON.parse(response)
+                            console.log(json)
+                            getNodes()
+                        },
+
+                        // handle a non-successful response
+                        error: function (xhr, errmsg, err) {
+                            // $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: " + errmsg +
+                            //     " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+                            // console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+                            $(this).trigger(M.toast({html: xhr.responseJSON.message}))
+                        }
+                    });
+                }
+            }
+
+        })
+    }
 });
 
 document.querySelector('#btn_node_active').addEventListener('click', e => {
@@ -1379,6 +1432,7 @@ function _updateLinks() {
         if (typeof path !== 'undefined' && path.length > 0) {
             // Draw the path
             path.forEach(function (p) {
+                console.log(path)
                 if ((d.source.id == p.source && d.target.id == p.target) || (d.source.id == p.target && d.target.id == p.source)) {
                     isPath = true
                 }

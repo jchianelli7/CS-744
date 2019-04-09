@@ -12,4 +12,5 @@ urlpatterns = [
     path('activeNode/', views.activeNode, name="activeNode"),
     path('addMessage/', views.addMessage, name="addMessage"),
     path('getMessage/', views.getMessage, name="getMessage"),
+    path('deletePattern/', views.deletePattern, name="deletePattern"),
 ]
