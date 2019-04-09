@@ -207,6 +207,71 @@ def deletePattern(request):
             response.set_cookie('username', user)
     return response
 
+def deleteDomain(request):
+    if (request.COOKIES.get('username') == None or request.COOKIES.get('is_superuser') == None):
+        response = redirect('/homepage/logout/')
+    else:
+        try:
+            userStatus = request.COOKIES.get('is_superuser')
+            user = request.COOKIES.get('username')
+            request = simplejson.loads(request.body)
+            ids = request['link']  # array of ids
+
+            for i in ids:
+                try:
+                    node = Node.objects.filter(id=i)[0]
+                except IndexError:
+                    # response = HttpResponse(json.dumps({'message': 'the node for deleting is not exists.'}))
+                    return bad_request(message='Error: Node not found')
+                # dont care about links here
+                #except Node.nodeDeleteError as e:
+                    # response = HttpResponse(json.dumps({'message': e}))
+                    #return bad_request(message='Error: Cant delete connector node with attached non-connectors')
+
+            # if all nodes are found, then delete
+
+            connectors = []
+            for i in ids:
+                node = Node.objects.filter(id=i)[0]
+                if(node.type == 0):
+                    node.delete()
+                elif (node.type == 1):
+                    connectors.append(node)
+                elif(node.type == 2):
+                    domainNode = node
+
+            # delete the connector last
+            for i in connectors:
+                node = Node.objects.filter(id=i.id)[0]
+                node.delete()
+
+            # finally delete domain
+            domainNode.delete()
+
+        except simplejson.JSONDecodeError:
+            pass
+        else:
+            pass
+        finally:
+            linkList = []
+            nodeList = []
+            if (Node.objects.count() > 0):
+                for i in Node.objects.all():
+                    node = {'id': i.id, 'number': i.number, 'type': i.type, 'status': i.status, 'pattern': i.pattern}
+                    nodeList.append(node)
+                    for target in i.link.all():
+                        dict = {'source': {'id': i.id, 'number': i.number, 'type': i.type, 'status': i.status,
+                                           'pattern': i.pattern},
+                                'target': {'id': target.id, 'number': target.number, 'type': target.type,
+                                           'status': target.status, 'pattern': target.pattern}}
+                        linkList.append(dict)
+
+            resp = {'node': nodeList, 'link': linkList}
+            response = HttpResponse(json.dumps(resp))
+            response.set_cookie('is_superuser', userStatus)
+            response.set_cookie('username', user)
+    return response
+
 
 def inactiveNode(request):
     if (request.COOKIES.get('username') == None or request.COOKIES.get('is_superuser') == None):

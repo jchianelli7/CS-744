@@ -199,7 +199,7 @@ document.querySelector('#btn_delete_pattern').addEventListener('click', e => {
             if (domain.patterns.includes(parseInt(pattern))) {
                 // pattern to be deleted exists in this domain
                 if (domain.patterns.length == 1) {
-                    $(this).trigger(M.toast({html: 'Error: only one domain exists in pattern. Use delete domain instead'}));
+                    $(this).trigger(M.toast({html: 'Error: Only one pattern exists in domain. Use delete domain instead'}));
                 } else {
                     // delete pattern
                     console.log(patterns[pattern])
@@ -236,6 +236,96 @@ document.querySelector('#btn_delete_pattern').addEventListener('click', e => {
             }
 
         })
+    }
+});
+
+document.querySelector('#btn_delete_domain').addEventListener('click', e => {
+    var e = document.getElementById("delete_domain_dropdown");
+    var domainSelection = e.options[e.selectedIndex].value;
+    var links = this.forceLayout.links()
+    var domainNode = _findDomainByID(domainSelection)
+    if (domainNode === undefined) {
+        $(this).trigger(M.toast({html: 'Error: Domain not found!'}));
+        return
+    }
+    console.log(domainNode)
+
+    // Find domain in front end data structure
+    var domainIndex = -1
+    domains.forEach(function (d, idx) {
+        if (d.id != -1 && d.id == domainNode.id) {
+            domainIndex = idx
+        }
+    })
+    if (domainIndex == -1) {
+        $(this).trigger(M.toast({html: 'Error: Domain not found!'}));
+        return
+    }
+
+    var r = confirm("Are you sure you want to delete Domain " + domainSelection + "? All associated nodes and patterns will be deleted");
+    if (r == true) {
+        var linkedToDomain = [] // ids of domains linked to domian
+        links.forEach(function (link) {
+            if (link.source.id == domainNode.id && !linkedToDomain.includes(link.target.id)) {
+                if (link.target.type == 2) //only if domain node
+                    linkedToDomain.push(link.target.id)
+            }
+            if (link.target.id == domainNode.id && !linkedToDomain.includes(link.source.id)) {
+                if (link.source.type == 2)//only if domain node
+                    linkedToDomain.push(link.source.id)
+            }
+        })
+        console.log(linkedToDomain)
+
+        if (linkedToDomain.length == 0 || linkedToDomain.length == 1) {
+            // only one domain, delete everything
+            // or connected to one other domain, still delete everything
+            console.log(patterns)
+            console.log(domains[domainIndex])
+            var idsToBeDeleted = []
+            idsToBeDeleted.push(domains[domainIndex].id)
+            domains[domainIndex].patterns.forEach(function (pattern) {
+                patterns[pattern].nodes.forEach(function (node) {
+                    idsToBeDeleted.push(node.id)
+                })
+            })
+            console.log(idsToBeDeleted)
+            let data = {
+                'link': []
+            }
+
+            if (idsToBeDeleted.length == 0) {
+                $(this).trigger(M.toast({html: 'Error deleting domain'}));
+                return
+            }
+
+            data.link = idsToBeDeleted
+
+            $.ajax({
+                url: "/homepage/deleteDomain/", // the endpoint
+                type: "POST", // http method
+                data: JSON.stringify(data),
+
+                // handle a successful response
+                success: function (response) {
+                    console.log("success"); // another sanity check
+                    let json = JSON.parse(response)
+                    console.log(json)
+                    location.reload()
+                },
+
+                // handle a non-successful response
+                error: function (xhr, errmsg, err) {
+                    // $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: " + errmsg +
+                    //     " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+                    // console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+                    $(this).trigger(M.toast({html: xhr.responseJSON.message}))
+                }
+            });
+        } else {
+            $(this).trigger(M.toast({html: 'Error: Deleting domain will break ring topology'}));
+            return
+        }
     }
 });
 
@@ -605,7 +695,7 @@ function getNodes() {
 
         // handle a successful response
         success: function (response) {
-            if (response == '') {
+            if (response == '') { // Backend databse has 0 nodes
                 updateDropDown([], [])
                 return
             }
@@ -617,7 +707,9 @@ function getNodes() {
                 if (e.type == 2) {
                     // Dealing with domain nodes only
                     var domainNumber = convertDomainToInt(e.number)
+                    console.log(domainNumber)
                     domains[domainNumber].id = e.id
+                    domains[domainNumber].number = e.number
                     const node = {
                         id: e.id,
                         number: e.number,
@@ -1616,6 +1708,18 @@ function updateDropDown(nodes, link) {
         option.text = name.number;
         option.value = name.id
         selectTarget.add(option, 0);
+    })
+
+    // Delete Domain
+    var select = document.getElementById("delete_domain_dropdown");
+    $('#delete_domain_dropdown').empty()
+    nodes.forEach(function (name, value) {
+        if (name.type == 2) {
+            var option = document.createElement('option');
+            option.text = name.number;
+            option.value = convertDomainToInt(name.number)
+            select.add(option, 0);
+        }
     })
 
     // Add Node
