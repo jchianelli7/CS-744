@@ -109,8 +109,7 @@ var groupPath = function (d) {
     return "M" + d3.geom.hull(fakePoints).join("L") + "Z";
 };
 
-/* Globals End */
-
+/* Globals End
 /* Button Event Start */
 document.querySelector('#btn_node').addEventListener('click', e => {
     var e = document.getElementById("add_pattern_dropdown");
@@ -184,6 +183,151 @@ document.querySelector('#btn_delete').addEventListener('click', e => {
     var f = document.getElementById("delete_node");
     var id = f.options[f.selectedIndex].value;
     this.prepareDelete(pattern, id);
+});
+
+document.querySelector('#btn_delete_pattern').addEventListener('click', e => {
+    var e = document.getElementById("delete_pattern_dropdown");
+    var pattern = e.options[e.selectedIndex].value;
+    var f = document.getElementById("delete_node");
+    var id = f.options[f.selectedIndex].value;
+
+    var r = confirm("Are you sure you want to delete Pattern " + pattern + "? All associated nodes will be deleted");
+    if (r == true) {
+        // Check if domain contains more than one pattern.
+        // if not, use delete domain instead
+        domains.forEach(function (domain) {
+            if (domain.patterns.includes(parseInt(pattern))) {
+                // pattern to be deleted exists in this domain
+                console.log(domain)
+                if (domain.patterns.length == 1) {
+                    $(this).trigger(M.toast({html: 'Error: Only one pattern exists in domain. Use delete domain instead'}));
+                } else {
+                    // delete pattern
+                    console.log(patterns[pattern])
+                    let data = {
+                        'link': []
+                    }
+
+                    patterns[pattern].nodes.forEach(function (node) {
+                        data.link.push(node.id)
+                    })
+
+                    $.ajax({
+                        url: "/homepage/deletePattern/", // the endpoint
+                        type: "POST", // http method
+                        data: JSON.stringify(data),
+
+                        // handle a successful response
+                        success: function (response) {
+                            console.log("success"); // another sanity check
+                            let json = JSON.parse(response)
+                            console.log(json)
+                            getNodes()
+                        },
+
+                        // handle a non-successful response
+                        error: function (xhr, errmsg, err) {
+                            // $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: " + errmsg +
+                            //     " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+                            // console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+                            $(this).trigger(M.toast({html: xhr.responseJSON.message}))
+                        }
+                    });
+                }
+            }
+
+        })
+    }
+});
+
+document.querySelector('#btn_delete_domain').addEventListener('click', e => {
+    var e = document.getElementById("delete_domain_dropdown");
+    var domainSelection = e.options[e.selectedIndex].value;
+    var links = this.forceLayout.links()
+    var domainNode = _findDomainByID(domainSelection)
+    if (domainNode === undefined) {
+        $(this).trigger(M.toast({html: 'Error: Domain not found!'}));
+        return
+    }
+    console.log(domainNode)
+
+    // Find domain in front end data structure
+    var domainIndex = -1
+    domains.forEach(function (d, idx) {
+        if (d.id != -1 && d.id == domainNode.id) {
+            domainIndex = idx
+        }
+    })
+    if (domainIndex == -1) {
+        $(this).trigger(M.toast({html: 'Error: Domain not found!'}));
+        return
+    }
+
+    var r = confirm("Are you sure you want to delete Domain " + domainSelection + "? All associated nodes and patterns will be deleted");
+    if (r == true) {
+        var linkedToDomain = [] // ids of domains linked to domian
+        links.forEach(function (link) {
+            if (link.source.id == domainNode.id && !linkedToDomain.includes(link.target.id)) {
+                if (link.target.type == 2) //only if domain node
+                    linkedToDomain.push(link.target.id)
+            }
+            if (link.target.id == domainNode.id && !linkedToDomain.includes(link.source.id)) {
+                if (link.source.type == 2)//only if domain node
+                    linkedToDomain.push(link.source.id)
+            }
+        })
+        console.log(linkedToDomain)
+
+        if (linkedToDomain.length == 0 || linkedToDomain.length == 1) {
+            // only one domain, delete everything
+            // or connected to one other domain, still delete everything
+            console.log(patterns)
+            console.log(domains[domainIndex])
+            var idsToBeDeleted = []
+            idsToBeDeleted.push(domains[domainIndex].id)
+            domains[domainIndex].patterns.forEach(function (pattern) {
+                patterns[pattern].nodes.forEach(function (node) {
+                    idsToBeDeleted.push(node.id)
+                })
+            })
+            console.log(idsToBeDeleted)
+            let data = {
+                'link': []
+            }
+
+            if (idsToBeDeleted.length == 0) {
+                $(this).trigger(M.toast({html: 'Error deleting domain'}));
+                return
+            }
+
+            data.link = idsToBeDeleted
+
+            $.ajax({
+                url: "/homepage/deleteDomain/", // the endpoint
+                type: "POST", // http method
+                data: JSON.stringify(data),
+
+                // handle a successful response
+                success: function (response) {
+                    console.log("success"); // another sanity check
+                    let json = JSON.parse(response)
+                    console.log(json)
+                    location.reload()
+                },
+
+                // handle a non-successful response
+                error: function (xhr, errmsg, err) {
+                    // $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: " + errmsg +
+                    //     " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+                    // console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+                    $(this).trigger(M.toast({html: xhr.responseJSON.message}))
+                }
+            });
+        } else {
+            $(this).trigger(M.toast({html: 'Error: Deleting domain will break ring topology'}));
+            return
+        }
+    }
 });
 
 document.querySelector('#btn_node_active').addEventListener('click', e => {
@@ -266,6 +410,13 @@ $('#send').on('click', function () {
         var paths = setPath()
         var sp = new ShortestPathCalculator(forceLayout.nodes(), paths);
         var route = sp.findRoute(find(id1), find(id2));
+
+        console.log(route)
+        if (route.mesg == "OK" && route.path.length == 0) {
+            // Path found but length not calculated
+            $('#send').trigger(M.toast({html: 'Error: try again.'}))
+            return
+        }
 
         // Formats result of path
         var translatedRoute = []
@@ -538,6 +689,15 @@ function addLink(s, l) {
 }
 
 function getNodes() {
+    this.domains = []
+    for (var i = 0; i < 99; i++) { //max 99 patterns
+        var domain = {};
+        domain['id'] = -1;
+        domain['number'] = ''
+        domain['patterns'] = []
+        domain['connectors'] = [];
+        this.domains.push(domain);
+    }
     // GET current nodes in database
     $.ajax({
         url: "/homepage/get/", // the endpoint
@@ -545,7 +705,7 @@ function getNodes() {
 
         // handle a successful response
         success: function (response) {
-            if (response == '') {
+            if (response == '') { // Backend databse has 0 nodes
                 updateDropDown([], [])
                 return
             }
@@ -558,6 +718,7 @@ function getNodes() {
                     // Dealing with domain nodes only
                     var domainNumber = convertDomainToInt(e.number)
                     domains[domainNumber].id = e.id
+                    domains[domainNumber].number = e.number
                     const node = {
                         id: e.id,
                         number: e.number,
@@ -733,6 +894,24 @@ function createLink(s, t) {
 
     if (this.forceLayout.nodes()[source].type == 0 || this.forceLayout.nodes()[target].type == 0) {
         $(this).trigger(M.toast({html: 'Error: You can only link connecor nodes'}))
+        return
+    }
+
+    var domainIndex = -1
+    domains.forEach(function (domain, idx) {
+        if (domain.connectors.includes(this.forceLayout.nodes()[source].id)) {
+            domainIndex = idx
+        }
+    })
+
+    if (domainIndex == -1) {
+        $(this).trigger(M.toast({html: 'Error: Link not found'}))
+    }
+
+    console.log(domainIndex)
+
+    if (!domains[domainIndex].connectors.includes(this.forceLayout.nodes()[target].id)) {
+        $(this).trigger(M.toast({html: 'Error: Nodes are not in the same domain'}))
         return
     }
 
@@ -1186,6 +1365,8 @@ function _tick() {
             // Draw the path
             path.forEach(function (p) {
                 if ((d.source.id == p.source && d.target.id == p.target) || (d.source.id == p.target && d.target.id == p.source)) {
+                    console.log(d.source)
+                    //console.log(d.target)
                     isPath = true
                 }
             })
@@ -1301,8 +1482,6 @@ function draw(nodes, links) {
             return n
         });
     });
-    console.log(this.groupNodes)
-
     this.updateDropDown(nodes, links)
     this._redraw()
 }
@@ -1558,6 +1737,18 @@ function updateDropDown(nodes, link) {
         selectTarget.add(option, 0);
     })
 
+    // Delete Domain
+    var select = document.getElementById("delete_domain_dropdown");
+    $('#delete_domain_dropdown').empty()
+    nodes.forEach(function (name, value) {
+        if (name.type == 2) {
+            var option = document.createElement('option');
+            option.text = name.number;
+            option.value = convertDomainToInt(name.number)
+            select.add(option, 0);
+        }
+    })
+
     // Add Node
     var select = document.getElementById("modal_pattern_dropdown");
     $('#modal_pattern_dropdown').empty()
@@ -1626,6 +1817,7 @@ function setPath() {
 }
 
 function drawPath(path) {
+    console.log(path)
     this.path = []
     var i = 0;
     (function loop() {
