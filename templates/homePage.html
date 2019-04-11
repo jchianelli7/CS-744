@@ -108,7 +108,7 @@
 
             {#           delete function menu start here #}
             <a id="addTrigger" style="margin-left: 33px;font-size: 25px;color: black">Delete</a>
-            <ul id="addUl" style="margin-left: 33px;height: 275px;">
+            <ul id="addUl" style="margin-left: 33px;height: 375px;">
                 <li>Select pattern of node to be deleted</li>
                 <li>
                     <div class="input-field" style="width: 150px;margin:1px 0 0 1px;">
@@ -129,8 +129,20 @@
                         <li>
                             <a id="btn_delete" class="waves-effect waves-light btn-small" style="margin: 6px 0 0 30px;">Delete</a>
                         </li>
+                        <li>
+                            <a id="btn_delete_pattern" class="waves-effect waves-light btn-small"
+                               style="background-color: red;margin: 6px 0 0 30px;">Delete Pattern</a>
+                        </li>
+                        <li>
+                            <div class="input-field" style="width: 150px;margin:1px 0 0 1px;">
+                                <select id="delete_domain_dropdown"></select>
+                            </div>
+                            <a id="btn_delete_domain" class="waves-effect waves-light btn-small"
+                               style="background-color: red;margin: 6px 0 0 30px;">Delete Domain</a>
+                        </li>
                     </ul>
                 </li>
+
             </ul>
         </div>
 
