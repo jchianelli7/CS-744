@@ -1655,10 +1655,16 @@ function nodesIndexToID(ind) {
 }
 
 function updateDropDown(nodes, link) {
+    var sortedNodes = []
+    nodes.forEach(function (node) {
+        sortedNodes.push(node)
+    })
+    sortedNodes.sort((a, b) => (a.number > b.number) ? 1 : -1)
+
     // Domain
     var select = document.getElementById("add_domain_dropdown");
     $('#add_domain_dropdown').empty()
-    nodes.forEach(function (name, value) {
+    sortedNodes.forEach(function (name, value) {
         if (name.type == 2) {
             var option = document.createElement('option');
             option.text = name.number;
@@ -1674,7 +1680,7 @@ function updateDropDown(nodes, link) {
     // Add Node
     var select = document.getElementById("add_pattern_dropdown");
     $('#add_pattern_dropdown').empty()
-    nodes.forEach(function (name, value) {
+    sortedNodes.forEach(function (name, value) {
         if (name.type == 1) {
             var option = document.createElement('option');
             option.text = name.pattern;
@@ -1690,7 +1696,7 @@ function updateDropDown(nodes, link) {
     //Delete Node
     var select = document.getElementById("delete_pattern_dropdown");
     $('#delete_pattern_dropdown').empty()
-    nodes.forEach(function (name, value) {
+    sortedNodes.forEach(function (name, value) {
         if (name.type == 1) {
             var option = document.createElement('option');
             option.text = name.pattern;
@@ -1701,7 +1707,7 @@ function updateDropDown(nodes, link) {
 
     var select = document.getElementById("delete_node");
     $('#delete_node').empty()
-    nodes.forEach(function (name, value) {
+    sortedNodes.forEach(function (name, value) {
         var option = document.createElement('option');
         option.text = name.number;
         option.value = name.id
@@ -1711,7 +1717,7 @@ function updateDropDown(nodes, link) {
     // Activate node
     var select = document.getElementById("activate_dropdown");
     $('#activate_dropdown').empty()
-    nodes.forEach(function (name, value) {
+    sortedNodes.forEach(function (name, value) {
         var option = document.createElement('option');
         option.text = name.number;
         option.value = name.id
@@ -1722,7 +1728,7 @@ function updateDropDown(nodes, link) {
     $('#add_source').empty()
     $('#add_target').empty()
     var selectSource = document.getElementById("add_source");
-    nodes.forEach(function (name, value) {
+    sortedNodes.forEach(function (name, value) {
         var option = document.createElement('option');
         option.text = name.number;
         option.value = name.id
@@ -1730,7 +1736,7 @@ function updateDropDown(nodes, link) {
     })
 
     var selectTarget = document.getElementById("add_target");
-    nodes.forEach(function (name, value) {
+    sortedNodes.forEach(function (name, value) {
         var option = document.createElement('option');
         option.text = name.number;
         option.value = name.id
@@ -1740,7 +1746,7 @@ function updateDropDown(nodes, link) {
     // Delete Domain
     var select = document.getElementById("delete_domain_dropdown");
     $('#delete_domain_dropdown').empty()
-    nodes.forEach(function (name, value) {
+    sortedNodes.forEach(function (name, value) {
         if (name.type == 2) {
             var option = document.createElement('option');
             option.text = name.number;
@@ -1752,7 +1758,7 @@ function updateDropDown(nodes, link) {
     // Add Node
     var select = document.getElementById("modal_pattern_dropdown");
     $('#modal_pattern_dropdown').empty()
-    nodes.forEach(function (name, value) {
+    sortedNodes.forEach(function (name, value) {
         if (name.type == 1) {
             var option = document.createElement('option');
             option.text = name.pattern;
@@ -1764,7 +1770,7 @@ function updateDropDown(nodes, link) {
     //Add Domain
     var select = document.getElementById("modal_domain_dropdown");
     $('#modal_domain_dropdown').empty()
-    nodes.forEach(function (name, value) {
+    sortedNodes.forEach(function (name, value) {
         if (name.type == 2) {
             var option = document.createElement('option');
             option.text = name.number;
@@ -1778,7 +1784,7 @@ function updateDropDown(nodes, link) {
     $('#text_target_dropdown').empty()
 
     var textSource = document.getElementById("text_source_dropdown");
-    nodes.forEach(function (name, value) {
+    sortedNodes.forEach(function (name, value) {
         var option = document.createElement('option');
         option.text = name.number;
         option.value = name.id
@@ -1786,7 +1792,7 @@ function updateDropDown(nodes, link) {
     })
 
     var textTarget = document.getElementById("text_target_dropdown");
-    nodes.forEach(function (name, value) {
+    sortedNodes.forEach(function (name, value) {
         var option = document.createElement('option');
         option.text = name.number;
         option.value = name.id
