@@ -387,6 +387,14 @@ document.querySelector('#modal_btn_domain').addEventListener('click', e => {
 
 });
 
+document.querySelector('#btn_delete_link').addEventListener('click', e => {
+    var e = document.getElementById("delete_source");
+    var source = e.options[e.selectedIndex].value;
+    var f = document.getElementById("delete_target");
+    var target = f.options[f.selectedIndex].value;
+    this.deleteLink(source, target)
+});
+
 
 $('#send').on('click', function () {
     let text = $('#input_text').val()
@@ -944,8 +952,55 @@ function createLink(s, t) {
     });
 
     this._redraw();
+}
 
+function deleteLink(s, t) {
+    let source = -1, target = -1;
 
+    var link = this._findLink(s, t)
+    if (this._findLink(s, t) === undefined) {
+        $(this).trigger(M.toast({html: 'Error: Link does not exist.'}))
+        return
+    }
+
+    source = find(s)
+    target = find(t)
+
+    // only connector node links can be deleted
+    if (this.forceLayout.nodes()[source].type != 1 || this.forceLayout.nodes()[target].type != 1) {
+        $(this).trigger(M.toast({html: 'Error: Deleting link will break topology'}))
+        return
+    } else {
+        // Links have to be connected. Can only create link within domain. no need to check, just delete link
+        this.removeLinkBetween(s, t)
+    }
+
+    this._updateLinks()
+    let data = {
+        'link': []
+    }
+    data.link = this.forceLayout.links()
+    $.ajax({
+        url: "/homepage/addNode/", // the endpoint
+        type: "POST", // http method
+        data: JSON.stringify(data),
+
+        // handle a successful response
+        success: function (response) {
+            // console.log(JSON.parse(response)) // log the returned json to the console
+            console.log("success"); // another sanity check
+            _redraw()
+        },
+
+        // handle a non-successful response
+        error: function (xhr, errmsg, err) {
+            $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: " + errmsg +
+                " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+            console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+        }
+    });
+
+    this._redraw();
 }
 
 function _verifyNewLink(source, target) {
@@ -1724,7 +1779,7 @@ function updateDropDown(nodes, link) {
         select.add(option, 0);
     })
 
-    // Links
+    // Add Link
     $('#add_source').empty()
     $('#add_target').empty()
     var selectSource = document.getElementById("add_source");
@@ -1736,6 +1791,25 @@ function updateDropDown(nodes, link) {
     })
 
     var selectTarget = document.getElementById("add_target");
+    sortedNodes.forEach(function (name, value) {
+        var option = document.createElement('option');
+        option.text = name.number;
+        option.value = name.id
+        selectTarget.add(option, 0);
+    })
+
+    // Delete Link
+    $('#delete_source').empty()
+    $('#delete_target').empty()
+    var selectSource = document.getElementById("delete_source");
+    sortedNodes.forEach(function (name, value) {
+        var option = document.createElement('option');
+        option.text = name.number;
+        option.value = name.id
+        selectSource.add(option, 0);
+    })
+
+    var selectTarget = document.getElementById("delete_target");
     sortedNodes.forEach(function (name, value) {
         var option = document.createElement('option');
         option.text = name.number;
