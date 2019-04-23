@@ -370,7 +370,7 @@ def getMessage(request):
             request = simplejson.loads(request.body)
             messages = []
             for i in Message.objects.filter(nodeId_id=request['id']):
-                mesg = {'id': str(i.nodeId), 'message': str(i.message)}
+                mesg = {'id': str(i.id), 'message': str(i.message)}
                 messages.append(mesg)
 
             type(messages)
@@ -381,6 +381,23 @@ def getMessage(request):
         response = HttpResponse(json.dumps({'message': messages}))
         return response
 
+def deleteMessage(request):
+    if (request.COOKIES.get('username') == None or request.COOKIES.get('is_superuser') == None):
+        response = redirect('/homepage/logout/')
+    else:
+        try:
+            request = simplejson.loads(request.body)
+            message = request['message'][0]
+            messageToBeDeleted = Message.objects.filter(id=message['id'])[0]
+            messageToBeDeleted.delete()
+
+        except IndexError:
+            return bad_request(message='Error: Message does not exist')
+        except simplejson.JSONDecodeError:
+            response = HttpResponse()
+        else:
+            response = HttpResponse()
+    return response
 
 def generateTestData(request):
     if(request.COOKIES.get('username')==None or request.COOKIES.get('is_superuser')==None):
