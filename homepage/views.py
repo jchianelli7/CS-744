@@ -380,3 +380,21 @@ def getMessage(request):
 
         response = HttpResponse(json.dumps({'message': messages}))
         return response
+
+def deleteMessage(request):
+    if (request.COOKIES.get('username') == None or request.COOKIES.get('is_superuser') == None):
+        response = redirect('/homepage/logout/')
+    else:
+        try:
+            request = simplejson.loads(request.body)
+            message = request['message'][0]
+            messageToBeDeleted = Message.objects.filter(id=message['id'])[0]
+            messageToBeDeleted.delete()
+
+        except IndexError:
+            return bad_request(message='Error: Message does not exist')
+        except simplejson.JSONDecodeError:
+            response = HttpResponse()
+        else:
+            response = HttpResponse()
+    return response

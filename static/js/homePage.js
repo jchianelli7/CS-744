@@ -395,11 +395,46 @@ document.querySelector('#btn_delete_link').addEventListener('click', e => {
     this.deleteLink(source, target)
 });
 
-$("#messages_list").on("click", "button", function(e) {
+$("#messages_list").on("click", "button", function (e) {
     e.preventDefault();
     var id = $(this)[0].parentNode.firstChild.id
-    console.log(id)
-    //$(this).parent().remove();
+    let data = {
+        'message': []
+    }
+    const message = {
+        id: id,
+    };
+
+    data.message.push(message)
+    $.ajax({
+        url: "/homepage/deleteMessage/", // the endpoint
+        type: "POST", // http method
+        data: JSON.stringify(data),
+
+        // handle a successful response
+        success: function (response) {
+            // console.log(JSON.parse(response)) // log the returned json to the console
+            console.log("success"); // another sanity check
+            var modal = document.getElementById('myModal');
+            var modal2 = document.getElementById('domainModal');
+            var modal3 = document.getElementById('messageModal');
+
+            modal.style.display = "none";
+            modal2.style.display = "none";
+            modal3.style.display = "none";
+
+            _redraw()
+        },
+
+        // handle a non-successful response
+        error: function (xhr, errmsg, err) {
+            $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: " + errmsg +
+                " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+            console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+            $('#messages_list').trigger(M.toast({html: 'Error: Unable to delete message.'}))
+
+        }
+    });
 });
 
 $('#send').on('click', function () {
@@ -1950,8 +1985,8 @@ function clickNode(d) {
                 } else {
                     var items = [];
                     $.each(resp.message, function (i, item) {
-                               // <span class="close_modal_domain">&times;</span>
-                        items.push('<li><div id='+item.id+' style="display: none;"></div>' + (i + 1) + " : " + item.message + '<button class="button">X</button></li>');
+                        // <span class="close_modal_domain">&times;</span>
+                        items.push('<li><div id=' + item.id + ' style="display: none;"></div>' + (i + 1) + " : " + item.message + '<button class="button">X</button></li>');
                     });
                     $('#messages_list').append(items.join(''));
                 }
