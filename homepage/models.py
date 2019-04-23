@@ -41,7 +41,7 @@ class Node(models.Model):
         elif (Node.objects.filter(id=self.id).exists() == False):
             raise Node.nodeNotExistError('the source node did not exist')
 
-        elif (self.link.filter(type=0).count() == 2 or node.link.filter(type=0).count() == 2):
+        elif ((self.link.filter(type=0).count() == 2 or node.link.filter(type=0).count() == 2) and self.type==0 and node.type==0):
             raise Node.nodeLinkError('the node has two links')
 
         elif (self.type == 1 and self.link.count() == 0 and node.type == 0 and Node.objects.filter(id != self.id,
@@ -53,6 +53,14 @@ class Node(models.Model):
             self.link.add(node)
             node.link.add(self)
         return
+
+    def deletePath(self,node):
+        if(isinstance(node, Node) == False):
+            raise Node.nodeError('the type of argu for addLink should be Node instead of ' + str(type(node)) + '.')
+        else:
+            self.link.filter(number=node.number).delete()
+            node.link.filter(number=self.number).delete()
+
 
     def delete(self, using=None, keep_parents=False):
         if (self.type == 1 and self.link.count() > 0):  # What if the connector is linked to another connector?
