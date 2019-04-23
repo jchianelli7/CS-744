@@ -370,7 +370,7 @@ def getMessage(request):
             request = simplejson.loads(request.body)
             messages = []
             for i in Message.objects.filter(nodeId_id=request['id']):
-                mesg = {'id': str(i.nodeId), 'message': str(i.message)}
+                mesg = {'id': str(i.id), 'message': str(i.message)}
                 messages.append(mesg)
 
             type(messages)

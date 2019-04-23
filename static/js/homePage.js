@@ -395,6 +395,12 @@ document.querySelector('#btn_delete_link').addEventListener('click', e => {
     this.deleteLink(source, target)
 });
 
+$("#messages_list").on("click", "button", function(e) {
+    e.preventDefault();
+    var id = $(this)[0].parentNode.firstChild.id
+    console.log(id)
+    //$(this).parent().remove();
+});
 
 $('#send').on('click', function () {
     let text = $('#input_text').val()
@@ -1406,7 +1412,7 @@ function _tick() {
         .style("stroke", 'green')
         .style("stroke-width", 10)
         .style("stroke-linejoin", "round")
-        .style("opacity", .2)
+        .style("opacity", .4)
         .attr("d", groupPath);
 
     this.vis.selectAll("line").remove()
@@ -1944,7 +1950,8 @@ function clickNode(d) {
                 } else {
                     var items = [];
                     $.each(resp.message, function (i, item) {
-                        items.push('<li>' + (i + 1) + " : " + item.message + '</li>');
+                               // <span class="close_modal_domain">&times;</span>
+                        items.push('<li><div id='+item.id+' style="display: none;"></div>' + (i + 1) + " : " + item.message + '<button class="button">X</button></li>');
                     });
                     $('#messages_list').append(items.join(''));
                 }
@@ -1986,6 +1993,4 @@ function clickNode(d) {
 
     // Show the modal
     $('#messageModalButton').click()
-
-
 }
