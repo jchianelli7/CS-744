@@ -15,7 +15,7 @@
             height: 600px;
             padding: 10px;
             background-color: #bbc3ce;
-            margin: 0 auto;
+            margin-left: -113px;
             margin-top: 15px
         }
 
@@ -59,14 +59,14 @@
 <div class="sideNav " style=" overflow-y:auto;">
     <div>
         <div>
-            <i class="material-icons" style="font-size: 60px;margin: 25px 0 0 25px;">account_circle</i>
+            <i class="material-icons" style="font-size: 60px;margin: 50px 0 0 25px;">account_circle</i>
         </div>
         <div style="margin-top: -20px;">
-            <h5 id="userStatus"></h5>
-            <a id="logout" class="waves-effect waves-light btn" style="margin-left: 30px">Logout</a>
+            <h5 id="userStatus" style="width:150px;margin: 20px 0 0 25px"></h5>
+            <a id="logout" class="waves-effect waves-light btn" style="margin: 30px 0 0 20px">Logout</a>
         </div>
         <div class="divider z-depth-5" style="margin-top: 15px"></div>
-        <div class="z-depth-5" id="admin">
+        <div id="admin">
             <a style="margin-left: 33px;font-size: 25px;color: black">Add</a>
             <ul style="margin-left: 33px;height: 415px;">
                 <li>Add Node to selected domain:</li>
@@ -102,11 +102,12 @@
                     </div>
                     <a id="btn_link" class="waves-effect waves-light btn-small" style="margin: 6px 0 0 30px;">Add
                         Link</a>
-                    <div class="divider z-depth-5" style="margin-top: 15px"></div>
+
                 </li>
             </ul>
 
             {#           delete function menu start here #}
+            <div class="divider z-depth-5" style="margin-top: 15px"></div>
             <a id="addTrigger" style="margin-left: 33px;font-size: 25px;color: black">Delete</a>
             <ul id="addUl" style="margin-left: 33px;height: 375px;">
                 <li>Select pattern of node to be deleted</li>
@@ -114,7 +115,7 @@
                     <div class="input-field" style="width: 150px;margin:1px 0 0 1px;">
                         <select id="delete_pattern_dropdown"></select>
                     </div>
-                    <div class="divider z-depth-5" style="margin-top: 15px"></div>
+
                 </li>
                 <li>
                     <ul>
@@ -130,15 +131,15 @@
                             <a id="btn_delete" class="waves-effect waves-light btn-small" style="margin: 6px 0 0 30px;">Delete</a>
                         </li>
                         <li>
-                            <a id="btn_delete_pattern" class="waves-effect waves-light btn-small"
-                               style="background-color: red;margin: 6px 0 0 30px;">Delete Pattern</a>
+                            <a id="btn_delete_pattern" class="waves-effect waves-light btn-small #ff8a80 red accent-1"
+                               style="margin: 6px 0 0 30px;">Delete Pattern</a>
                         </li>
                         <li>
                             <div class="input-field" style="width: 150px;margin:1px 0 0 1px;">
                                 <select id="delete_domain_dropdown"></select>
                             </div>
-                            <a id="btn_delete_domain" class="waves-effect waves-light btn-small"
-                               style="background-color: red;margin: 6px 0 0 30px;">Delete Domain</a>
+                            <a id="btn_delete_domain" class="waves-effect waves-light btn-small #ff8a80 red accent-1"
+                               style="margin: 6px 0 0 30px;">Delete Domain</a>
                         </li>
                     </ul>
                 </li>
@@ -147,7 +148,6 @@
         </div>
 
         {#        Activate Node Section #}
-        <div class="divider z-depth-5" style="margin-top: 15px"></div>
         <div class="z-depth-5">
             <a style="margin-left: 33px;font-size: 25px;color: black">Activate</a>
             <ul style="margin-left: 33px;height: 415px;">
@@ -174,7 +174,7 @@
 
 <!--text area-->
 <div class="textArea">
-    <h6 style="position: absolute;margin: 33px 0 0 10px;">
+    <h6 style="position: absolute;margin: 33px 0 0 25px;">
         Send message from
     </h6>
     <div style="width: 90px;position: absolute; margin: 20px 0 0 180px;">
