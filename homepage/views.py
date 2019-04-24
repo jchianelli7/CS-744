@@ -381,6 +381,23 @@ def getMessage(request):
         response = HttpResponse(json.dumps({'message': messages}))
         return response
 
+def deleteMessage(request):
+    if (request.COOKIES.get('username') == None or request.COOKIES.get('is_superuser') == None):
+        return redirect('/homepage/logout/')
+    else:
+        try:
+            request = simplejson.loads(request.body)
+            if(Message.objects.filter(id=request['id']).exists()):
+                Message.objects.filter(id=request['id']).delete()
+                response=HttpResponse
+            else:
+                response=HttpResponse(json.dumps({'message': 'the message is not exist'}))
+        except simplejson.JSONDecodeError:
+            response=HttpResponse(json.dumps({'message': 'the message is not exist'}))
+        finally:
+            response.set_cookie('is_superuser', request.COOKIES.get('is_superuser'))
+            response.set_cookie('username', request.COOKIES.get('username'))
+            return response
 
 def generateTestData(request):
     if(request.COOKIES.get('username')==None or request.COOKIES.get('is_superuser')==None):
@@ -456,7 +473,6 @@ def generateTestData(request):
         nodeInP[18].link.filter(number=nodeInP[0].number).delete()
         nodeInP[0].addLink(nodeInP[13])
         nodeInP[7].addLink(nodeInP[18])
-        #---------------------------------------------------------
         #createD01 and link two domain
         domain = Node.objects.create(number='D01', type=2, pattern='P04')
         domain.addLink(Node.objects.filter(number='D00')[0])
@@ -581,9 +597,31 @@ def generateTestData(request):
         nodeD00.addLink(nodeD03)
         nodeD01.addLink(nodeD02)
         nodeD02.addLink(nodeD03)
+        #-------------------------------------------------------------------------------------------------------
+        # -------------------------------------------------------------------------------------------------------
+        #create the all message for testing
+        #clear the 'Message' table
+        for msg in Message.objects.all():
+            msg.delete()
+        Message.objects.create(nodeId_id=Node.objects.filter(number='N32')[0].id,message="this is a test message.")
+        Message.objects.create(nodeId_id=Node.objects.filter(number='N12')[0].id, message="Can we connect our patterns?")
+        Message.objects.create(nodeId_id=Node.objects.filter(number='N70')[0].id, message="Routing through the domains.")
+        Message.objects.create(nodeId_id=Node.objects.filter(number='N53')[0].id, message="Hi Neighbor!")
+        Message.objects.create(nodeId_id=Node.objects.filter(number='N33')[0].id, message="Complicated routing!")
+        Message.objects.create(nodeId_id=Node.objects.filter(number='N76')[0].id, message="Informal descriptions are sent to you!")
+        Message.objects.create(nodeId_id=Node.objects.filter(number='N57')[0].id, message="Any message from the other domains?")
+        Message.objects.create(nodeId_id=Node.objects.filter(number='N68')[0].id, message="What is the syllabus for the final exam?")
+        Message.objects.create(nodeId_id=Node.objects.filter(number='N70')[0].id, message="Incorrect attachment in the mail.")
+        Message.objects.create(nodeId_id=Node.objects.filter(number='N49')[0].id, message="Please distribute this to our pattern members.")
+        Message.objects.create(nodeId_id=Node.objects.filter(number='N75')[0].id, message="Is this the longest path? Please confirm.")
+        Message.objects.create(nodeId_id=Node.objects.filter(number='N33')[0].id, message="Do we belong to the same domain? If not, can we move?")
+        Message.objects.create(nodeId_id=Node.objects.filter(number='N29')[0].id, message="How do we make our communication quicker?")
+        Message.objects.create(nodeId_id=Node.objects.filter(number='N31')[0].id, message="A list of items are on the way to you!")
+        Message.objects.create(nodeId_id=Node.objects.filter(number='N70')[0].id, message="I am leaving, good bye!")
 
         response=redirect('/homepage/homepage/')
         response.set_cookie('is_superuser', userStatus)
         response.set_cookie('username', user)
 
     return response
+
