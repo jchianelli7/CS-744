@@ -175,7 +175,7 @@ def deletePattern(request):
 
             for i in ids:
                 node = Node.objects.filter(id=i)[0]
-                if(node.type == 0):
+                if (node.type == 0):
                     node.delete()
                 elif (node.type == 1):
                     connector = node
@@ -207,6 +207,7 @@ def deletePattern(request):
             response.set_cookie('username', user)
     return response
 
+
 def deleteDomain(request):
     if (request.COOKIES.get('username') == None or request.COOKIES.get('is_superuser') == None):
         response = redirect('/homepage/logout/')
@@ -224,20 +225,20 @@ def deleteDomain(request):
                     # response = HttpResponse(json.dumps({'message': 'the node for deleting is not exists.'}))
                     return bad_request(message='Error: Node not found')
                 # dont care about links here
-                #except Node.nodeDeleteError as e:
-                    # response = HttpResponse(json.dumps({'message': e}))
-                    #return bad_request(message='Error: Cant delete connector node with attached non-connectors')
+                # except Node.nodeDeleteError as e:
+                # response = HttpResponse(json.dumps({'message': e}))
+                # return bad_request(message='Error: Cant delete connector node with attached non-connectors')
 
             # if all nodes are found, then delete
 
             connectors = []
             for i in ids:
                 node = Node.objects.filter(id=i)[0]
-                if(node.type == 0):
+                if (node.type == 0):
                     node.delete()
                 elif (node.type == 1):
                     connectors.append(node)
-                elif(node.type == 2):
+                elif (node.type == 2):
                     domainNode = node
 
             # delete the connector last
@@ -399,13 +400,14 @@ def deleteMessage(request):
             response = HttpResponse()
     return response
 
+
 def generateTestData(request):
-    if(request.COOKIES.get('username')==None or request.COOKIES.get('is_superuser')==None):
+    if (request.COOKIES.get('username') == None or request.COOKIES.get('is_superuser') == None):
         response = redirect('/homepage/logout/')
     else:
         userStatus = request.COOKIES.get('is_superuser')
         user = request.COOKIES.get('username')
-        #clear the database
+        # clear the database
         for node in Node.objects.filter(type=2):
             node.delete()
         for node in Node.objects.filter(type=0):
@@ -413,14 +415,14 @@ def generateTestData(request):
         for node in Node.objects.filter(type=1):
             node.delete()
         nodeInP = []
-        #create D00
-        domain=Node.objects.create(number='D00',type=2,pattern='P00')
-        #create P00
-        for num in range(0,7):
-            if(num==0):
+        # create D00
+        domain = Node.objects.create(number='D00', type=2, pattern='P00')
+        # create P00
+        for num in range(0, 7):
+            if (num == 0):
                 nodeInP.append(Node.objects.create(number='N' + str(num).zfill(2), type=1, pattern='P00'))
             else:
-                nodeInP.append(Node.objects.create(number='N'+str(num).zfill(2),type=0,pattern='P00'))
+                nodeInP.append(Node.objects.create(number='N' + str(num).zfill(2), type=0, pattern='P00'))
         nodeInP[0].addLink(domain)
         nodeInP[0].addLink(nodeInP[5])
         nodeInP[1].addLink(nodeInP[2])
@@ -429,12 +431,12 @@ def generateTestData(request):
         nodeInP[4].addLink(nodeInP[5])
         nodeInP[5].addLink(nodeInP[6])
         nodeInP[6].addLink(nodeInP[1])
-        #createP01
-        for num in range(7,13):
-            if(num==7):
+        # createP01
+        for num in range(7, 13):
+            if (num == 7):
                 nodeInP.append(Node.objects.create(number='N' + str(num).zfill(2), type=1, pattern='P01'))
             else:
-                nodeInP.append(Node.objects.create(number='N'+str(num).zfill(2),type=0,pattern='P01'))
+                nodeInP.append(Node.objects.create(number='N' + str(num).zfill(2), type=0, pattern='P01'))
         nodeInP[7].addLink(domain)
         nodeInP[7].addLink(nodeInP[11])
         nodeInP[7].addLink(nodeInP[8])
@@ -443,12 +445,12 @@ def generateTestData(request):
         nodeInP[10].addLink(nodeInP[11])
         nodeInP[11].addLink(nodeInP[12])
         nodeInP[12].addLink(nodeInP[8])
-        #createP02
-        for num in range(13,18):
-            if(num==13):
+        # createP02
+        for num in range(13, 18):
+            if (num == 13):
                 nodeInP.append(Node.objects.create(number='N' + str(num).zfill(2), type=1, pattern='P02'))
             else:
-                nodeInP.append(Node.objects.create(number='N'+str(num).zfill(2),type=0,pattern='P02'))
+                nodeInP.append(Node.objects.create(number='N' + str(num).zfill(2), type=0, pattern='P02'))
         nodeInP[13].addLink(domain)
         nodeInP[13].addLink(nodeInP[16])
         nodeInP[13].addLink(nodeInP[17])
@@ -457,32 +459,32 @@ def generateTestData(request):
         nodeInP[15].addLink(nodeInP[16])
         nodeInP[16].addLink(nodeInP[17])
         nodeInP[17].addLink(nodeInP[14])
-        #createP03
-        for num in range(18,22):
-            if(num==18):
+        # createP03
+        for num in range(18, 22):
+            if (num == 18):
                 nodeInP.append(Node.objects.create(number='N' + str(num).zfill(2), type=1, pattern='P03'))
             else:
-                nodeInP.append(Node.objects.create(number='N'+str(num).zfill(2),type=0,pattern='P03'))
+                nodeInP.append(Node.objects.create(number='N' + str(num).zfill(2), type=0, pattern='P03'))
         nodeInP[18].addLink(domain)
         nodeInP[18].addLink(nodeInP[21])
         nodeInP[19].addLink(nodeInP[20])
         nodeInP[20].addLink(nodeInP[21])
         nodeInP[21].addLink(nodeInP[19])
-        #correct the path between patterns in D00
+        # correct the path between patterns in D00
         nodeInP[0].link.filter(number=nodeInP[18].number).delete()
         nodeInP[18].link.filter(number=nodeInP[0].number).delete()
         nodeInP[0].addLink(nodeInP[13])
         nodeInP[7].addLink(nodeInP[18])
-        #---------------------------------------------------------
-        #createD01 and link two domain
+        # ---------------------------------------------------------
+        # createD01 and link two domain
         domain = Node.objects.create(number='D01', type=2, pattern='P04')
         domain.addLink(Node.objects.filter(number='D00')[0])
-        #createP04
-        for num in range(22,29):
-            if(num==22):
+        # createP04
+        for num in range(22, 29):
+            if (num == 22):
                 nodeInP.append(Node.objects.create(number='N' + str(num).zfill(2), type=1, pattern='P04'))
             else:
-                nodeInP.append(Node.objects.create(number='N'+str(num).zfill(2),type=0,pattern='P04'))
+                nodeInP.append(Node.objects.create(number='N' + str(num).zfill(2), type=0, pattern='P04'))
         nodeInP[22].addLink(domain)
         nodeInP[22].addLink(nodeInP[25])
         nodeInP[22].addLink(nodeInP[26])
@@ -493,10 +495,10 @@ def generateTestData(request):
         nodeInP[26].addLink(nodeInP[27])
         nodeInP[27].addLink(nodeInP[28])
         nodeInP[28].addLink(nodeInP[23])
-        #createP05
+        # createP05
         nodeInP.append(Node.objects.create(number='N' + str(29).zfill(2), type=1, pattern='P05'))
         nodeInP[29].addLink(domain)
-        #createP06
+        # createP06
         for num in range(30, 33):
             if (num == 30):
                 nodeInP.append(Node.objects.create(number='N' + str(num).zfill(2), type=1, pattern='P06'))
@@ -519,7 +521,7 @@ def generateTestData(request):
         nodeInP[35].addLink(nodeInP[36])
         nodeInP[36].addLink(nodeInP[37])
         nodeInP[37].addLink(nodeInP[34])
-        #correct the path between the pattern
+        # correct the path between the pattern
         nodeInP[30].addLink(nodeInP[22])
         nodeInP[22].addLink(nodeInP[29])
         nodeInP[29].addLink(nodeInP[33])
@@ -570,7 +572,9 @@ def generateTestData(request):
                 thisconnector[0].addLink(thisnonconnector[0])
 
         # create loop
-        allconnector = Node.objects.filter(type='1').exclude(pattern='P00').exclude(pattern='P01').exclude(pattern='P02').exclude(pattern='P03').exclude(pattern='P04').exclude(pattern='P05').exclude(pattern='P06').exclude(pattern='P07')
+        allconnector = Node.objects.filter(type='1').exclude(pattern='P00').exclude(pattern='P01').exclude(
+            pattern='P02').exclude(pattern='P03').exclude(pattern='P04').exclude(pattern='P05').exclude(
+            pattern='P06').exclude(pattern='P07')
         for connectivenode in allconnector:
             loopnodes = Node.objects.filter(pattern=connectivenode.pattern, type='0')
 
@@ -599,7 +603,23 @@ def generateTestData(request):
         nodeD01.addLink(nodeD02)
         nodeD02.addLink(nodeD03)
 
-        response=redirect('/homepage/homepage/')
+        Message.objects.create(message='This is a test message.', nodeId_id=Node.objects.filter(number='N32')[0].id).save()
+        Message.objects.create(message='Can we connect our patterns?', nodeId_id=Node.objects.filter(number='N12')[0].id).save()
+        Message.objects.create(message='Routing through the domains.', nodeId_id=Node.objects.filter(number='N70')[0].id).save()
+        Message.objects.create(message='Hi Neighbor!', nodeId_id=Node.objects.filter(number='N53')[0].id).save()
+        Message.objects.create(message='Complicated routing!', nodeId_id=Node.objects.filter(number='N33')[0].id).save()
+        Message.objects.create(message='Informal descriptions are sent to you!', nodeId_id=Node.objects.filter(number='N76')[0].id).save()
+        Message.objects.create(message='Any message from the other domains?', nodeId_id=Node.objects.filter(number='N57')[0].id).save()
+        Message.objects.create(message='What is the syllabus for the final exam?', nodeId_id=Node.objects.filter(number='N68')[0].id).save()
+        Message.objects.create(message='Incorrect attachment in the mail.', nodeId_id=Node.objects.filter(number='N70')[0].id).save()
+        Message.objects.create(message='Please distribute this to our pattern members.', nodeId_id=Node.objects.filter(number='N49')[0].id).save()
+        Message.objects.create(message='Is this the longest path? Please confirm', nodeId_id=Node.objects.filter(number='N75')[0].id).save()
+        Message.objects.create(message='Do we belong to the same domain? If not, can we move?', nodeId_id=Node.objects.filter(number='N33')[0].id).save()
+        Message.objects.create(message='How do we make our communication quicker?', nodeId_id=Node.objects.filter(number='N29')[0].id).save()
+        Message.objects.create(message='A list of items are on the way to you!', nodeId_id=Node.objects.filter(number='N31')[0].id).save()
+        Message.objects.create(message='I am leaving, good bye!', nodeId_id=Node.objects.filter(number='N70')[0].id).save()
+
+        response = redirect('/homepage/homepage/')
         response.set_cookie('is_superuser', userStatus)
         response.set_cookie('username', user)
 
