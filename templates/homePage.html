@@ -67,8 +67,8 @@
         </div>
         <div class="divider z-depth-5" style="margin-top: 15px"></div>
         <div class="z-depth-5" id="admin">
-            <a style="margin-left: 33px;font-size: 25px;color: black">Add</a>
-            <ul style="margin-left: 33px;height: 415px;">
+            <a style="margin-left: 33px;font-size: 25px;color: black">Add Node</a>
+            <ul style="margin-left: 33px;height: 215px;">
                 <li>Add Node to selected domain:</li>
                 <li>
                     <div class="input-field" style="width: 150px;margin:1px 0 0 1px;">
@@ -84,25 +84,6 @@
                         Node</a>
                     <div class="divider z-depth-5" style="margin-top: 15px"></div>
 
-                </li>
-
-                <li>Add Link</li>
-                <li>
-                    <div class="input-field" style="width: 150px;margin:1px 0 0 1px;">
-                        <select id="add_source">
-                            <option value="" disabled selected>Source Node</option>
-                        </select>
-                    </div>
-                </li>
-                <li>
-                    <div class="input-field" style="width: 150px;margin:1px 0 0 1px;">
-                        <select id="add_target">
-                            <option value="" disabled selected>Target Node</option>
-                        </select>
-                    </div>
-                    <a id="btn_link" class="waves-effect waves-light btn-small" style="margin: 6px 0 0 30px;">Add
-                        Link</a>
-                    <div class="divider z-depth-5" style="margin-top: 15px"></div>
                 </li>
             </ul>
 
@@ -150,7 +131,7 @@
         <div class="divider z-depth-5" style="margin-top: 15px"></div>
         <div class="z-depth-5">
             <a style="margin-left: 33px;font-size: 25px;color: black">Activate</a>
-            <ul style="margin-left: 33px;height: 415px;">
+            <ul style="margin-left: 33px;height: 215px;">
                 <li>Activate Node</li>
                 <li>
                     <div class="input-field" style="width: 150px;margin:1px 0 0 1px;">
@@ -161,6 +142,48 @@
                     <a id="btn_node_active" class="waves-effect waves-light btn-small" style="margin: 6px 0 0 30px;">Activate</a>
                     <div class="divider z-depth-5" style="margin-top: 15px"></div>
 
+                </li>
+            </ul>
+        </div>
+        <div class="z-depth-5">
+            <a style="margin-left: 33px;font-size: 25px;color: black">Link Maintenance</a>
+            <ul style="margin-left: 33px;height: 415px;">
+                <li>Add Link</li>
+                <li>
+                    <div class="input-field" style="width: 150px;margin:1px 0 0 1px;">
+                        <select id="add_source">
+                            <option value="" disabled selected>Source Node</option>
+                        </select>
+                    </div>
+                </li>
+                <li>
+                    <div class="input-field" style="width: 150px;margin:1px 0 0 1px;">
+                        <select id="add_target">
+                            <option value="" disabled selected>Target Node</option>
+                        </select>
+                    </div>
+                    <a id="btn_link" class="waves-effect waves-light btn-small" style="margin: 6px 0 0 30px;">Add
+                        Link</a>
+                    <div class="divider z-depth-5" style="margin-top: 15px"></div>
+                </li>
+
+                <li>Delete Link</li>
+                <li>
+                    <div class="input-field" style="width: 150px;margin:1px 0 0 1px;">
+                        <select id="delete_source">
+                            <option value="" disabled selected>Source Node</option>
+                        </select>
+                    </div>
+                </li>
+                <li>
+                    <div class="input-field" style="width: 150px;margin:1px 0 0 1px;">
+                        <select id="delete_target">
+                            <option value="" disabled selected>Target Node</option>
+                        </select>
+                    </div>
+                    <a id="btn_delete_link" class="waves-effect waves-light btn-small" style="margin: 6px 0 0 30px;">Delete
+                        Link</a>
+                    <div class="divider z-depth-5" style="margin-top: 15px"></div>
                 </li>
             </ul>
         </div>
@@ -285,6 +308,7 @@
     var span = document.getElementsByClassName("close_modal")[0];
     var spanMessage = document.getElementsByClassName("close_modal_message")[0];
     var spanDomain = document.getElementsByClassName("close_modal_domain")[0];
+
 
 
     // When the user clicks on the button, open the modal

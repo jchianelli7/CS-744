@@ -387,6 +387,55 @@ document.querySelector('#modal_btn_domain').addEventListener('click', e => {
 
 });
 
+document.querySelector('#btn_delete_link').addEventListener('click', e => {
+    var e = document.getElementById("delete_source");
+    var source = e.options[e.selectedIndex].value;
+    var f = document.getElementById("delete_target");
+    var target = f.options[f.selectedIndex].value;
+    this.deleteLink(source, target)
+});
+
+$("#messages_list").on("click", "button", function (e) {
+    e.preventDefault();
+    var id = $(this)[0].parentNode.firstChild.id
+    let data = {
+        'message': []
+    }
+    const message = {
+        id: id,
+    };
+
+    data.message.push(message)
+    $.ajax({
+        url: "/homepage/deleteMessage/", // the endpoint
+        type: "POST", // http method
+        data: JSON.stringify(data),
+
+        // handle a successful response
+        success: function (response) {
+            // console.log(JSON.parse(response)) // log the returned json to the console
+            console.log("success"); // another sanity check
+            var modal = document.getElementById('myModal');
+            var modal2 = document.getElementById('domainModal');
+            var modal3 = document.getElementById('messageModal');
+
+            modal.style.display = "none";
+            modal2.style.display = "none";
+            modal3.style.display = "none";
+
+            _redraw()
+        },
+
+        // handle a non-successful response
+        error: function (xhr, errmsg, err) {
+            $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: " + errmsg +
+                " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+            console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+            $('#messages_list').trigger(M.toast({html: 'Error: Unable to delete message.'}))
+
+        }
+    });
+});
 
 $('#send').on('click', function () {
     let text = $('#input_text').val()
@@ -850,7 +899,7 @@ function updateStatus(newNodes) {
                     return 0;
                 return 20
             })
-            .style('fill', d => d.status == true ? (d.type == 1 ? "blue" : "white") : (d.type == 1 ? "orange" : "red"))
+            .style('fill', d => d.status == true ? (d.type == 1 ? "blue" : "white") : "red")
             .transition().duration(750).ease('elastic')
 
         node.append("rect")
@@ -944,8 +993,55 @@ function createLink(s, t) {
     });
 
     this._redraw();
+}
 
+function deleteLink(s, t) {
+    let source = -1, target = -1;
 
+    var link = this._findLink(s, t)
+    if (this._findLink(s, t) === undefined) {
+        $(this).trigger(M.toast({html: 'Error: Link does not exist.'}))
+        return
+    }
+
+    source = find(s)
+    target = find(t)
+
+    // only connector node links can be deleted
+    if (this.forceLayout.nodes()[source].type != 1 || this.forceLayout.nodes()[target].type != 1) {
+        $(this).trigger(M.toast({html: 'Error: Deleting link will break topology'}))
+        return
+    } else {
+        // Links have to be connected. Can only create link within domain. no need to check, just delete link
+        this.removeLinkBetween(s, t)
+    }
+
+    this._updateLinks()
+    let data = {
+        'link': []
+    }
+    data.link = this.forceLayout.links()
+    $.ajax({
+        url: "/homepage/addNode/", // the endpoint
+        type: "POST", // http method
+        data: JSON.stringify(data),
+
+        // handle a successful response
+        success: function (response) {
+            // console.log(JSON.parse(response)) // log the returned json to the console
+            console.log("success"); // another sanity check
+            _redraw()
+        },
+
+        // handle a non-successful response
+        error: function (xhr, errmsg, err) {
+            $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: " + errmsg +
+                " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+            console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+        }
+    });
+
+    this._redraw();
 }
 
 function _verifyNewLink(source, target) {
@@ -1351,7 +1447,7 @@ function _tick() {
         .style("stroke", 'green')
         .style("stroke-width", 10)
         .style("stroke-linejoin", "round")
-        .style("opacity", .2)
+        .style("opacity", .4)
         .attr("d", groupPath);
 
     this.vis.selectAll("line").remove()
@@ -1504,7 +1600,7 @@ function _updateNodes() {
                         return 0;
                     return 20
                 })
-                .style('fill', d => d.status == true ? (d.type == 1 ? "blue" : "white") : (d.type == 1 ? "orange" : "red"))
+                .style('fill', d => d.status == true ? (d.type == 1 ? "blue" : "white") : "red")
                 .transition().duration(750).ease('elastic')
 
             node.append("rect")
@@ -1724,7 +1820,7 @@ function updateDropDown(nodes, link) {
         select.add(option, 0);
     })
 
-    // Links
+    // Add Link
     $('#add_source').empty()
     $('#add_target').empty()
     var selectSource = document.getElementById("add_source");
@@ -1736,6 +1832,25 @@ function updateDropDown(nodes, link) {
     })
 
     var selectTarget = document.getElementById("add_target");
+    sortedNodes.forEach(function (name, value) {
+        var option = document.createElement('option');
+        option.text = name.number;
+        option.value = name.id
+        selectTarget.add(option, 0);
+    })
+
+    // Delete Link
+    $('#delete_source').empty()
+    $('#delete_target').empty()
+    var selectSource = document.getElementById("delete_source");
+    sortedNodes.forEach(function (name, value) {
+        var option = document.createElement('option');
+        option.text = name.number;
+        option.value = name.id
+        selectSource.add(option, 0);
+    })
+
+    var selectTarget = document.getElementById("delete_target");
     sortedNodes.forEach(function (name, value) {
         var option = document.createElement('option');
         option.text = name.number;
@@ -1870,7 +1985,8 @@ function clickNode(d) {
                 } else {
                     var items = [];
                     $.each(resp.message, function (i, item) {
-                        items.push('<li>' + (i + 1) + " : " + item.message + '</li>');
+                        // <span class="close_modal_domain">&times;</span>
+                        items.push('<li><div id=' + item.id + ' style="display: none;"></div>' + (i + 1) + " : " + item.message + '<button class="button">X</button></li>');
                     });
                     $('#messages_list').append(items.join(''));
                 }
@@ -1912,6 +2028,4 @@ function clickNode(d) {
 
     // Show the modal
     $('#messageModalButton').click()
-
-
 }

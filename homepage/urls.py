@@ -14,4 +14,6 @@ urlpatterns = [
     path('getMessage/', views.getMessage, name="getMessage"),
     path('deletePattern/', views.deletePattern, name="deletePattern"),
     path('deleteDomain/', views.deleteDomain, name="deleteDomain"),
+    path('generateTestData/', views.generateTestData, name="generateTestData"),
+    path('deleteMessage/', views.deleteMessage, name="deleteMessage"),
 ]
