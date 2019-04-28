@@ -407,7 +407,7 @@ def generateTestData(request):
     else:
         userStatus = request.COOKIES.get('is_superuser')
         user = request.COOKIES.get('username')
-        # clear the database
+        #clear the database
         for node in Node.objects.filter(type=2):
             node.delete()
         for node in Node.objects.filter(type=0):
@@ -511,9 +511,9 @@ def generateTestData(request):
 
         for num in range(33, 38):
             if (num == 33):
-                nodeInP.append(Node.objects.create(number='N' + str(num).zfill(2), type=1, pattern='P06'))
+                nodeInP.append(Node.objects.create(number='N' + str(num).zfill(2), type=1, pattern='P07'))
             else:
-                nodeInP.append(Node.objects.create(number='N' + str(num).zfill(2), type=0, pattern='P06'))
+                nodeInP.append(Node.objects.create(number='N' + str(num).zfill(2), type=0, pattern='P07'))
         nodeInP[33].addLink(domain)
         nodeInP[33].addLink(nodeInP[34])
         nodeInP[33].addLink(nodeInP[36])

@@ -1,0 +1,5 @@
+delete from sqlite_sequence where name='homepage_node_link';
+
+delete from sqlite_sequence where name='homepage_node';
+
+Python3 manage.py dbshell
