@@ -15,7 +15,7 @@
             height: 600px;
             padding: 10px;
             background-color: #bbc3ce;
-            margin: 0 auto;
+            margin-left: -113px;
             margin-top: 15px
         }
 
@@ -59,11 +59,11 @@
 <div class="sideNav " style=" overflow-y:auto;">
     <div>
         <div>
-            <i class="material-icons" style="font-size: 60px;margin: 25px 0 0 25px;">account_circle</i>
+            <i class="material-icons" style="font-size: 60px;margin: 50px 0 0 25px;">account_circle</i>
         </div>
         <div style="margin-top: -20px;">
-            <h5 id="userStatus"></h5>
-            <a id="logout" class="waves-effect waves-light btn" style="margin-left: 30px">Logout</a>
+            <h5 id="userStatus" style="width:150px;margin: 20px 0 0 25px"></h5>
+            <a id="logout" class="waves-effect waves-light btn" style="margin: 30px 0 0 20px">Logout</a>
         </div>
         <div class="divider z-depth-5" style="margin-top: 15px"></div>
         <div class="z-depth-5" id="admin">
@@ -111,15 +111,17 @@
                             <a id="btn_delete" class="waves-effect waves-light btn-small" style="margin: 6px 0 0 30px;">Delete</a>
                         </li>
                         <li>
-                            <a id="btn_delete_pattern" class="waves-effect waves-light btn-small"
-                               style="background-color: red;margin: 6px 0 0 30px;">Delete Pattern</a>
+                            <a id="btn_delete_pattern" class="waves-effect waves-light btn-small #ff8a80 red accent-1"
+                               style="margin: 6px 0 0 30px;">Delete Pattern</a>
+{#                            <a id="btn_delete_pattern" class="waves-effect waves-light btn-small"#}
+{#                               style="background-color: red;margin: 6px 0 0 30px;">Delete Pattern</a>#}
                         </li>
                         <li>
                             <div class="input-field" style="width: 150px;margin:1px 0 0 1px;">
                                 <select id="delete_domain_dropdown"></select>
                             </div>
-                            <a id="btn_delete_domain" class="waves-effect waves-light btn-small"
-                               style="background-color: red;margin: 6px 0 0 30px;">Delete Domain</a>
+                            <a id="btn_delete_domain" class="waves-effect waves-light btn-small #ff8a80 red accent-1"
+                               style="margin: 6px 0 0 30px;">Delete Domain</a>
                         </li>
                     </ul>
                 </li>
@@ -308,7 +310,6 @@
     var span = document.getElementsByClassName("close_modal")[0];
     var spanMessage = document.getElementsByClassName("close_modal_message")[0];
     var spanDomain = document.getElementsByClassName("close_modal_domain")[0];
-
 
 
     // When the user clicks on the button, open the modal

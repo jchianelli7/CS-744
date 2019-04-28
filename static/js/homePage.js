@@ -9,7 +9,7 @@
             let isAdmin = cookieArr[i].split("=")[1].trim();
             var x = document.getElementById("admin");
             if (isAdmin == 'True') {
-                $("#userStatus").text('Admin').css('margin-left', 15 + '%')
+                $("#userStatus").text('Admin')
                 x.style.display = "block";
             } else {
                 $("#userStatus").text('Normal User')
